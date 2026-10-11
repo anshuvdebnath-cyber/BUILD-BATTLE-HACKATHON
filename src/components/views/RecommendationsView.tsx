@@ -98,9 +98,31 @@ export const RecommendationsView: React.FC = () => {
         </span>
       </div>
 
-      {/* Recommendations Cards Grid */}
-      <div className="grid grid-cols-1 gap-5">
-        {recommendations.map((rec) => {
+      {/* Recommendations Cards Grid or Empty State */}
+      {recommendations.length === 0 ? (
+        <div className="p-12 sm:p-16 text-center space-y-4 rounded-3xl bg-white/70 backdrop-blur-xl border border-slate-200 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center mx-auto text-indigo-700">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <div className="space-y-1.5 max-w-lg mx-auto">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">
+              No Adaptive Decisions Generated Yet
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Adaptive decisions, ROI calculations, and engineering incident SOP playbooks are synthesized once customer feedback is processed through Adaption model training.
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveTab('data-cleaning')}
+            className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-xs font-bold hover:bg-black transition-all cursor-pointer shadow-xs inline-flex items-center gap-2"
+          >
+            <span>Launch Adaption Model Training</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5">
+          {recommendations.map((rec) => {
           const isCritical = rec.severity === 'Critical';
           const isHigh = rec.severity === 'High';
 
@@ -306,7 +328,8 @@ export const RecommendationsView: React.FC = () => {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Details Inspection Modal */}
       {selectedDetailsRec && (

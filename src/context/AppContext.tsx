@@ -14,7 +14,8 @@ import {
 import { 
   HACKATHON_OFFICIAL_DATASET, 
   HACKATHON_QUALITY_METRICS, 
-  HACKATHON_RECOMMENDATIONS 
+  HACKATHON_RECOMMENDATIONS,
+  INITIAL_QUALITY_METRICS
 } from '../data/mockData';
 import { AdaptionIntelligenceService } from '../services/adaptionService';
 import confetti from 'canvas-confetti';
@@ -57,14 +58,10 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
-  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(HACKATHON_OFFICIAL_DATASET);
-  const [recommendations, setRecommendations] = useState<RecommendationItem[]>(() => {
-    return HACKATHON_RECOMMENDATIONS.map(r => ({
-      ...r,
-      playbook: AdaptionIntelligenceService.generatePlaybookForRecommendation(r)
-    }));
-  });
-  const [qualityMetrics, setQualityMetrics] = useState<AdaptionQualityMetrics>(HACKATHON_QUALITY_METRICS);
+  // Starts completely empty until live ingested & trained through Adaption
+  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
+  const [qualityMetrics, setQualityMetrics] = useState<AdaptionQualityMetrics>(INITIAL_QUALITY_METRICS);
   const [schemaReport, setSchemaReport] = useState<SchemaValidationReport | null>(null);
   const [activePlaybook, setActivePlaybook] = useState<ActionablePlaybook | null>(null);
   
@@ -88,7 +85,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAdapting, setIsAdapting] = useState<boolean>(false);
   const [adaptationProgress, setAdaptationProgress] = useState<number>(0);
   const [adaptationStepText, setAdaptationStepText] = useState<string>('');
-  const [hasRunAdaption, setHasRunAdaption] = useState<boolean>(true);
+  const [hasRunAdaption, setHasRunAdaption] = useState<boolean>(false);
 
   // Live synchronization with Adaption Labs backend API
   React.useEffect(() => {
@@ -202,8 +199,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAdaptationStepText('Connecting to Adaption Labs Adaptive Data Engine...');
 
     try {
+      const itemsToAdapt = feedbacks.length > 0 ? feedbacks : HACKATHON_OFFICIAL_DATASET;
       const result = await AdaptionIntelligenceService.runAdaptiveDataPipeline(
-        feedbacks,
+        itemsToAdapt,
         recipes,
         blueprint,
         (progress, text) => {

@@ -9,8 +9,32 @@ import {
 } from 'lucide-react';
 
 export const ExecutiveReportView: React.FC = () => {
-  const { feedbacks, recommendations, qualityMetrics, triggerConfetti } = useApp();
+  const { feedbacks, recommendations, qualityMetrics, triggerConfetti, setActiveTab } = useApp();
   const [copied, setCopied] = useState(false);
+
+  if (feedbacks.length === 0) {
+    return (
+      <div className="p-12 sm:p-16 text-center space-y-4 rounded-3xl bg-white/70 backdrop-blur-xl border border-slate-200 shadow-sm">
+        <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center mx-auto text-indigo-700">
+          <Sparkles className="w-6 h-6" />
+        </div>
+        <div className="space-y-1.5 max-w-lg mx-auto">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900">
+            Executive Brief Standby
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            The executive intelligence brief and quality lift audit will be synthesized once live feedback is trained through Adaption.
+          </p>
+        </div>
+        <button
+          onClick={() => setActiveTab('data-cleaning')}
+          className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-xs font-bold hover:bg-black transition-all cursor-pointer shadow-xs"
+        >
+          Open Live Ingestion & Training Hub
+        </button>
+      </div>
+    );
+  }
 
   const totalArrAtRisk = recommendations
     .filter(r => r.status !== 'resolved')

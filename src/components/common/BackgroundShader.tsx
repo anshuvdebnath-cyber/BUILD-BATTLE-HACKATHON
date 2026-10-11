@@ -51,49 +51,54 @@ export const BackgroundShader: React.FC = () => {
         vec2 p = uv;
         p.x *= aspect;
 
-        float t = u_time * 0.18;
-        vec2 mouse = u_mouse * 0.05;
+        // Enhanced movement speed and multi-frequency flow
+        float t = u_time * 0.36;
+        vec2 mouse = u_mouse * 0.08;
 
-        // Flowing diagonal chromatic light stream (matching reference image)
-        // Diagonal tilt from top-left to bottom-right
-        float diagCoord = (p.x * 0.65 - p.y * 0.75);
+        // Flowing diagonal chromatic light stream with dynamic undulating movement
+        float diagCoord = (p.x * 0.68 - p.y * 0.72);
         
-        // Fluid organic undulating light displacement
-        float wave1 = sin(diagCoord * 3.2 + t * 0.9 + mouse.x * 2.0) * 0.22;
-        float wave2 = cos(p.y * 3.6 - t * 0.6 + wave1) * 0.18;
-        float noiseVal = vnoise(p * 2.4 + vec2(t * 0.25, -t * 0.18)) * 0.30;
+        // Multi-frequency wave displacement for rich, visible, elegant motion
+        float wave1 = sin(diagCoord * 3.6 + t * 1.35 + mouse.x * 2.2) * 0.26;
+        float wave2 = cos(p.y * 4.4 - t * 1.05 + wave1 * 1.3) * 0.22;
+        float wave3 = sin((p.x + p.y) * 2.6 + t * 0.75 + mouse.y * 1.8) * 0.18;
+        float noiseVal1 = vnoise(p * 2.5 + vec2(t * 0.42, -t * 0.28)) * 0.30;
+        float noiseVal2 = vnoise(p * 4.8 - vec2(t * 0.22, t * 0.18)) * 0.14;
 
-        // Distance from the curved chromatic light beam
-        float beamCenter = 0.08 + wave1 + wave2 + noiseVal;
+        // Dynamic fluid beam center with undulating ribbons
+        float beamCenter = 0.05 + wave1 + wave2 + wave3 + noiseVal1 + noiseVal2;
         float distToBeam = abs(diagCoord - beamCenter);
 
-        // Core electric purple beam glow
-        float coreGlow = smoothstep(0.70, 0.0, distToBeam * 1.6);
-        float softGlow = smoothstep(1.15, 0.0, distToBeam * 0.95);
-        float ambientBloom = smoothstep(1.65, 0.0, distToBeam * 0.55);
+        // Luminous light feathering - soft, airy, and gentle
+        float coreGlow = smoothstep(0.72, 0.0, distToBeam * 1.55);
+        float softGlow = smoothstep(1.20, 0.0, distToBeam * 0.90);
+        float ambientBloom = smoothstep(1.75, 0.0, distToBeam * 0.50);
 
-        // Secondary soft violet cloud floating in upper right
-        float cloud2 = smoothstep(0.65, 0.0, length(uv - vec2(0.85, 0.88) - mouse * 0.4)) * 0.38;
+        // Secondary floating luminous cloud with active drift
+        vec2 cloudPos = vec2(0.80 + sin(t * 0.4) * 0.12, 0.85 + cos(t * 0.35) * 0.10);
+        float cloud2 = smoothstep(0.75, 0.0, length(uv - cloudPos - mouse * 0.4)) * 0.35;
 
-        // Color palette based directly on user reference image:
-        // Pure crisp white base, deep royal violet, vibrant electric purple, luminous lilac, and soft lavender highlight
-        vec3 col_white = vec3(0.985, 0.99, 1.0);              // Clean crisp white canvas
-        vec3 col_deep_violet = vec3(0.42, 0.12, 0.82);         // #6b1fd1
-        vec3 col_electric_purple = vec3(0.56, 0.22, 0.93);     // #8f38ed
-        vec3 col_neon_lilac = vec3(0.76, 0.52, 0.98);          // #c285fa
-        vec3 col_lavender_highlight = vec3(0.91, 0.84, 0.99);  // #e8d6fc
+        // Tertiary subtle accent ray drifting across the lower left
+        float ray3 = smoothstep(0.60, 0.0, abs((p.x * 0.5 + p.y * 0.5) - (0.45 + sin(t * 0.5) * 0.15))) * 0.22;
 
-        // Blend the chromatic layers
-        vec3 beamColor = mix(col_deep_violet, col_electric_purple, smoothstep(0.15, 0.6, coreGlow));
-        beamColor = mix(beamColor, col_neon_lilac, pow(coreGlow, 1.4));
-        beamColor = mix(beamColor, col_lavender_highlight, pow(coreGlow, 2.5));
+        // Lighter, luminous, ethereal pastel purple palette (never dark or muddy)
+        vec3 col_white = vec3(0.992, 0.995, 1.0);             // Pure luminous white canvas
+        vec3 col_light_lilac = vec3(0.82, 0.65, 0.98);        // #d2a6fa - bright luminous lilac
+        vec3 col_electric_violet = vec3(0.70, 0.46, 0.96);    // #b375f5 - light vibrant electric violet
+        vec3 col_radiant_orchid = vec3(0.78, 0.55, 0.98);     // #c78cfa - glowing light orchid
+        vec3 col_soft_lavender = vec3(0.92, 0.85, 0.99);      // #ebd9fc - airy pastel lavender highlight
 
-        // Blend onto pure white background so the backdrop remains brightly white with the violet beam floating across
-        float totalIntensity = clamp(coreGlow * 0.55 + softGlow * 0.28 + ambientBloom * 0.10 + cloud2 * 0.35, 0.0, 0.68);
+        // Compose the light beam gradient (purely high-luma pastel purple tones)
+        vec3 beamColor = mix(col_electric_violet, col_radiant_orchid, smoothstep(0.1, 0.55, coreGlow));
+        beamColor = mix(beamColor, col_light_lilac, pow(coreGlow, 1.2));
+        beamColor = mix(beamColor, col_soft_lavender, pow(coreGlow, 2.0));
+
+        // Blend onto pure white background with airy pastel transparency
+        float totalIntensity = clamp(coreGlow * 0.46 + softGlow * 0.22 + ambientBloom * 0.10 + cloud2 * 0.30 + ray3 * 0.18, 0.0, 0.52);
         vec3 finalColor = mix(col_white, beamColor, totalIntensity);
 
-        // Aesthetic fine film grain (matching user reference image texture)
-        float grain = (hash(gl_FragCoord.xy + fract(u_time * 19.37)) - 0.5) * 0.038;
+        // Delicate aesthetic film grain
+        float grain = (hash(gl_FragCoord.xy + fract(u_time * 23.17)) - 0.5) * 0.026;
         finalColor += grain;
 
         gl_FragColor = vec4(finalColor, 1.0);

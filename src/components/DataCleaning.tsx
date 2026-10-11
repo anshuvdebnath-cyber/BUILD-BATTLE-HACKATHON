@@ -26,7 +26,8 @@ export function DataCleaning() {
     qualityMetrics, 
     triggerConfetti, 
     setActiveTab,
-    addManualFeedback 
+    addManualFeedback,
+    runAdaptionPipeline 
   } = useApp();
 
   // Mode: File Upload vs Live Real-Time Ingestion
@@ -167,6 +168,9 @@ export function DataCleaning() {
         status: "Deployed to Live Inference",
         timestamp: new Date().toLocaleTimeString(),
       });
+
+      // Synchronize live trained intelligence into global context
+      await runAdaptionPipeline();
 
       triggerConfetti();
       setStatus(null);

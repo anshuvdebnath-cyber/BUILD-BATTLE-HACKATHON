@@ -41,6 +41,31 @@ export const AnalyticsView: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [tierFilter, setTierFilter] = useState<string>('all');
 
+  if (feedbacks.length === 0) {
+    return (
+      <div className="p-12 sm:p-16 text-center space-y-4 rounded-3xl bg-white/70 backdrop-blur-xl border border-slate-200 shadow-sm">
+        <div className="w-14 h-14 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-center mx-auto text-purple-700">
+          <Activity className="w-7 h-7" />
+        </div>
+        <div className="space-y-1.5 max-w-lg mx-auto">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900">
+            Analytics & Telemetry Standby
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Telemetry metrics, frequency distributions, sentiment clusters, and predictive anomaly forecasts will activate once live data is ingested and Adaption Model Training is completed.
+          </p>
+        </div>
+        <button
+          onClick={() => setActiveTab('data-cleaning')}
+          className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-xs font-bold hover:bg-black transition-all cursor-pointer shadow-xs inline-flex items-center gap-2"
+        >
+          <span>Open Live Ingestion & Training Hub</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
   const filteredFeedbacks = feedbacks.filter(item => {
     const matchesCat = categoryFilter === 'all' || item.category === categoryFilter;
     const matchesTier = tierFilter === 'all' || item.customerTier === tierFilter;
@@ -74,10 +99,15 @@ export const AnalyticsView: React.FC = () => {
     { tier: 'Starter', arr: feedbacks.filter(f => f.customerTier === 'Starter').reduce((acc, c) => acc + c.arrValue, 0) },
   ];
 
+  const posCount = feedbacks.filter(f => f.sentiment === 'positive').length;
+  const neuCount = feedbacks.filter(f => f.sentiment === 'neutral').length;
+  const negCount = feedbacks.filter(f => f.sentiment === 'negative').length;
+  const totalFeedbackCount = feedbacks.length || 1;
+
   const sentimentDistribution = [
-    { name: 'Positive', value: 45, count: '1,104 reviews (45%)', color: '#10b981' },
-    { name: 'Neutral', value: 30, count: '736 reviews (30%)', color: '#64748b' },
-    { name: 'Negative', value: 25, count: '613 reviews (25%)', color: '#ef4444' },
+    { name: 'Positive', value: Math.round((posCount / totalFeedbackCount) * 100), count: `${posCount} items (${Math.round((posCount / totalFeedbackCount) * 100)}%)`, color: '#10b981' },
+    { name: 'Neutral', value: Math.round((neuCount / totalFeedbackCount) * 100), count: `${neuCount} items (${Math.round((neuCount / totalFeedbackCount) * 100)}%)`, color: '#64748b' },
+    { name: 'Negative', value: Math.round((negCount / totalFeedbackCount) * 100), count: `${negCount} items (${Math.round((negCount / totalFeedbackCount) * 100)}%)`, color: '#ef4444' },
   ];
 
   const weeklyTrendData = [

@@ -9,7 +9,32 @@ import {
 } from 'lucide-react';
 
 export const TrackerView: React.FC = () => {
-  const { recommendations, updateIssueStatus } = useApp();
+  const { recommendations, updateIssueStatus, setActiveTab } = useApp();
+
+  if (recommendations.length === 0) {
+    return (
+      <div className="p-12 sm:p-16 text-center space-y-4 rounded-3xl bg-white/70 backdrop-blur-xl border border-slate-200 shadow-sm">
+        <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center mx-auto text-indigo-700">
+          <CheckCircle2 className="w-7 h-7" />
+        </div>
+        <div className="space-y-1.5 max-w-lg mx-auto">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900">
+            No Actionable Issues Queued
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Execution milestones and churn recovery tracks will populate automatically once Adaption model training synthesizes high-impact decisions.
+          </p>
+        </div>
+        <button
+          onClick={() => setActiveTab('data-cleaning')}
+          className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-xs font-bold hover:bg-black transition-all cursor-pointer shadow-xs inline-flex items-center gap-2"
+        >
+          <span>Launch Adaption Training</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
 
   const backlogIssues = recommendations.filter(r => r.status === 'backlog');
   const inProgressIssues = recommendations.filter(r => r.status === 'in_progress');

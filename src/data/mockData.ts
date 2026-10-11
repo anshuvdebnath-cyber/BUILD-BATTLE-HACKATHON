@@ -438,3 +438,17 @@ export const HACKATHON_QUALITY_METRICS: AdaptionQualityMetrics = {
   domainDetected: 'Consumer Marketplace & Multi-Vendor E-Commerce',
   languageDetected: 'English (High Duplication Density Cleared)',
 };
+
+export const INITIAL_QUALITY_METRICS: AdaptionQualityMetrics = {
+  baselineGrade: 'N/A',
+  baselineScore: 0.0,
+  baselinePercentile: 0,
+  adaptedGrade: 'STANDBY',
+  adaptedScore: 0.0,
+  adaptedPercentile: 0,
+  qualityLiftPercentage: 0,
+  totalRowsProcessed: 0,
+  duplicateRowsEliminated: 0,
+  domainDetected: 'Awaiting Live Stream Ingestion',
+  languageDetected: 'Model Pending Training',
+};
