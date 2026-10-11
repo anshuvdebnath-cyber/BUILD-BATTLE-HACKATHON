@@ -2,54 +2,66 @@ import React from 'react';
 
 interface LogoProps {
   className?: string;
-  showSubtitle?: boolean;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  showText?: boolean;
+  inverted?: boolean;
 }
 
-export const Logo: React.FC<LogoProps> = ({ className = '', showSubtitle = true }) => {
+export const Logo: React.FC<LogoProps> = ({ 
+  className = '', 
+  size = 'md',
+  showText = true,
+  inverted = false
+}) => {
+  const sizeMap = {
+    sm: { box: 'w-6 h-6', svg: 16, text: 'text-xs tracking-wider' },
+    md: { box: 'w-8 h-8', svg: 20, text: 'text-sm tracking-wider' },
+    lg: { box: 'w-10 h-10', svg: 24, text: 'text-base tracking-widest' },
+    xl: { box: 'w-14 h-14', svg: 34, text: 'text-2xl tracking-widest' },
+  };
+
+  const currentSize = sizeMap[size];
+
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      {/* Bespoke InsightFlow Custom Geometric Glyph */}
-      <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 shadow-sm border border-slate-700/30 overflow-hidden">
+    <div className={`flex items-center gap-2.5 select-none ${className}`}>
+      {/* Geometric Emblem: Custom Continuous Flow & Connected Intelligence Nodes */}
+      <div 
+        className={`flex items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 ${currentSize.box} ${
+          inverted ? 'bg-white text-black' : 'bg-slate-900 text-white'
+        }`}
+      >
         <svg 
-          width="20" 
-          height="20" 
+          width={currentSize.svg} 
+          height={currentSize.svg} 
           viewBox="0 0 24 24" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
-          className="text-white transform transition-transform hover:scale-105"
         >
-          {/* Abstract dual-current stream representing customer feedback into decision flow */}
+          {/* Continuous flowing geometric circuit */}
           <path 
-            d="M4 12C4 8 7 5 11 5C15 5 18 8 18 12C18 16 15 19 11 19" 
-            stroke="white" 
+            d="M6 8.5C6 6.01472 8.01472 4 10.5 4H13.5C15.9853 4 18 6.01472 18 8.5C18 10.9853 15.9853 12 13.5 12H10.5C8.01472 12 6 13.0147 6 15.5C6 17.9853 8.01472 20 10.5 20H13.5C15.9853 20 18 17.9853 18 15.5" 
+            stroke="currentColor" 
             strokeWidth="2.2" 
             strokeLinecap="round" 
+            strokeLinejoin="round" 
           />
-          <path 
-            d="M9 12C9 10 10.5 8.5 12.5 8.5C14.5 8.5 16 10 16 12C16 14 14.5 15.5 12.5 15.5" 
-            stroke="#38bdf8" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-          />
-          <circle cx="12.5" cy="12" r="1.5" fill="#10b981" />
+          {/* Central intelligence node */}
+          <circle cx="12" cy="12" r="2.2" fill={inverted ? "#2563eb" : "#38bdf8"} />
+          {/* Terminal nodes */}
+          <circle cx="10.5" cy="4" r="1.4" fill="currentColor" />
+          <circle cx="13.5" cy="20" r="1.4" fill={inverted ? "#10b981" : "#34d399"} />
         </svg>
       </div>
 
-      <div className="flex flex-col">
-        <div className="flex items-center gap-1.5 leading-none">
-          <span className="font-extrabold text-[17px] tracking-tight text-slate-900 font-['Inter']">
-            InsightFlow
-          </span>
-          <span className="text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
-            v2.0
-          </span>
-        </div>
-        {showSubtitle && (
-          <span className="text-[10.5px] font-semibold text-slate-500 mt-0.5 tracking-tight">
-            Customer Decision Platform
-          </span>
-        )}
-      </div>
+      {showText && (
+        <span 
+          className={`font-extrabold uppercase font-sans ${currentSize.text} ${
+            inverted ? 'text-white' : 'text-slate-900'
+          }`}
+        >
+          INSIGHTFLOW
+        </span>
+      )}
     </div>
   );
 };
