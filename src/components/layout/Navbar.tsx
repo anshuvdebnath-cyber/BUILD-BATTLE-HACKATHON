@@ -16,6 +16,7 @@ export const Navbar: React.FC = () => {
 
   const navItems: { id: ActiveTab; label: string; badge?: string | number }[] = [
     { id: 'overview', label: 'Overview' },
+    { id: 'data-cleaning', label: 'Upload & Clean' },
     { id: 'feedbacks', label: 'Feedback', badge: feedbacks.length },
     { 
       id: 'adaption-studio', 
@@ -44,7 +45,7 @@ export const Navbar: React.FC = () => {
         - Fine white glass perimeter & top specular rim: border border-white/70 shadow-[0_20px_50px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)]
         - Monochrome Black & White active states (Zero blue)
       */}
-      <header className="pointer-events-auto w-full max-w-6xl rounded-full bg-white/35 backdrop-blur-3xl backdrop-saturate-150 border border-white/70 shadow-[0_20px_50px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] px-5 sm:px-7 py-2.5 sm:py-3 flex items-center justify-between gap-6 transition-all">
+      <header className="pointer-events-auto w-full max-w-[1380px] rounded-full bg-white/35 backdrop-blur-3xl backdrop-saturate-150 border border-white/70 shadow-[0_20px_50px_rgba(0,0,0,0.06),inset_0_1px_2px_rgba(255,255,255,0.95)] px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-4 transition-all">
         
         {/* Left: Pure Monochrome Brand Emblem & Wordmark */}
         <button
@@ -76,7 +77,7 @@ export const Navbar: React.FC = () => {
 
           <div className="flex flex-col text-left">
             <div className="flex items-center gap-1.5 leading-none">
-              <span className="font-extrabold text-[14px] sm:text-[15px] tracking-widest uppercase text-slate-900 font-sans">
+              <span className="font-extrabold text-[13px] sm:text-[14px] tracking-widest uppercase text-slate-900 font-sans">
                 INSIGHTFLOW
               </span>
               <span className="hidden sm:inline text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-black/5 text-slate-800 border border-black/10">
@@ -97,7 +98,7 @@ export const Navbar: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`rounded-full px-3.5 sm:px-4 py-1.5 sm:py-2 uppercase text-[10.5px] sm:text-[11px] font-semibold tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                className={`rounded-full px-3 sm:px-3.5 py-1.5 sm:py-2 uppercase text-[10px] sm:text-[11px] font-semibold tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                   isActive
                     ? 'bg-slate-900 text-white font-bold shadow-xs'
                     : 'text-slate-700 hover:text-black hover:bg-black/5'

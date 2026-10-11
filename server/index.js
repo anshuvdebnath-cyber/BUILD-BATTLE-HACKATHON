@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { config } from './config/config.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
-import adaptionRoutes from './routes/adaptionRoutes.js';
+import adaptionRoutes from './src/routes/adaption.routes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { adaptionService } from './services/adaptionService.js';

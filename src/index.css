@@ -2,8 +2,9 @@
 
 @layer base {
   :root {
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --color-dark-gray: #0f172a;
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Space Grotesk', var(--font-sans);
+    --color-dark-gray: #090d16;
     --color-muted-gray: #475569;
     --color-border-subtle: #e2e8f0;
     --color-bg-light: #f8fafc;
@@ -12,99 +13,86 @@
   body {
     font-family: var(--font-sans);
     background-color: #f8fafc;
-    color: #0f172a;
+    color: #090d16;
     overflow-x: hidden;
     min-height: 100vh;
     font-weight: 500;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.012em;
     line-height: 1.55;
-    background-size: 32px 32px;
-    background-image: 
-      linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Make headings naturally bolder and punchier */
+  /* Distinctive, crisp typography for headings */
   h1, h2, h3, h4, h5, h6 {
-    color: #0f172a;
+    font-family: var(--font-heading);
+    color: #090d16;
     font-weight: 700;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
   }
 }
 
 /* Floating Glass Navbar - Translucent, Sticky to Top */
 .floating-navbar {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.05), inset 0 1px 2px rgba(255, 255, 255, 0.95);
   border-radius: 9999px;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.floating-navbar:hover {
-  border-color: rgba(203, 213, 225, 1);
-  box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.08);
+/* Shader Keyframe Animations (Adaption Labs Ambient Motion) */
+@keyframes float-shader-1 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(60px, 40px) scale(1.08);
+  }
+  100% {
+    transform: translate(-30px, 70px) scale(0.96);
+  }
+}
+
+@keyframes float-shader-2 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-70px, 50px) scale(1.06);
+  }
+  100% {
+    transform: translate(40px, -40px) scale(0.95);
+  }
+}
+
+@keyframes float-shader-3 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(40px, -50px) scale(1.05);
+  }
+  100% {
+    transform: translate(-50px, 30px) scale(0.98);
+  }
 }
 
 /* Clean High-Contrast Cards */
 .insight-card, .adaption-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03), 0 8px 24px rgba(15, 23, 42, 0.03);
   transition: all 0.2s ease;
 }
 
 .insight-card:hover, .adaption-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
-}
-
-.insight-input, .adaption-input {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
-  border-radius: 10px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.insight-input:focus, .adaption-input:focus {
-  border-color: #0f172a;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
-}
-
-.btn-primary-pill, .btn-adaption-dark {
-  background-color: #0f172a;
-  color: #ffffff;
-  border-radius: 9999px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-primary-pill:hover, .btn-adaption-dark:hover {
-  background-color: #1e293b;
-  transform: translateY(-1px);
-}
-
-.btn-outline-pill, .btn-adaption-outline {
-  background-color: #ffffff;
-  color: #0f172a;
-  border: 1px solid #cbd5e1;
-  border-radius: 9999px;
-  font-weight: 550;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-outline-pill:hover, .btn-adaption-outline:hover {
-  background-color: #f1f5f9;
-  border-color: #94a3b8;
+  border-color: rgba(203, 213, 225, 1);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
 }
 
 /* Custom Minimal Scrollbar */
@@ -114,7 +102,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {

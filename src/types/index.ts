@@ -176,4 +176,4 @@ export interface RecommendationItem {
   actionType?: 'Fix' | 'Plan' | 'Monitor' | 'Roadmap';
 }
 
-export type ActiveTab = 'overview' | 'feedbacks' | 'adaption-studio' | 'analytics' | 'recommendations' | 'tracker' | 'executive-report';
+export type ActiveTab = 'overview' | 'feedbacks' | 'data-cleaning' | 'adaption-studio' | 'analytics' | 'recommendations' | 'tracker' | 'executive-report';

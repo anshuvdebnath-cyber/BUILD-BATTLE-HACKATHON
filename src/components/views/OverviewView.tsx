@@ -21,7 +21,8 @@ import {
   Target,
   Clock,
   Search,
-  ListOrdered
+  ListOrdered,
+  Upload
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
@@ -161,10 +162,11 @@ export const OverviewView: React.FC = () => {
               <span>Simulate PRD Processing Flow</span>
             </button>
             <button
-              onClick={() => setActiveTab('feedbacks')}
-              className="w-full sm:w-auto px-5 py-2.5 btn-outline-pill text-xs flex items-center justify-center gap-2 cursor-pointer font-semibold"
+              onClick={() => setActiveTab('data-cleaning')}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-slate-900 hover:bg-black text-white text-xs flex items-center justify-center gap-2 cursor-pointer font-bold shadow-xs transition-all"
             >
-              <span>Import Your Feedback</span>
+              <Upload className="w-3.5 h-3.5" />
+              <span>Upload & Clean CSV (Adaption)</span>
             </button>
           </div>
         </div>
