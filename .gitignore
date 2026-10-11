@@ -22,6 +22,10 @@ dist-ssr
 .DS_Store
 *.suo
 *.ntvs*
-*.njsproj
-*.sln
 *.sw?
+
+# Temporary uploads and outputs
+uploads/
+server/uploads/
+/data/
+!server/data/

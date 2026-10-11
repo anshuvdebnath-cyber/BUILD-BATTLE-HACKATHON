@@ -1,0 +1,9 @@
+feedback_id,customer_id,text,source,timestamp
+FB-001,CUST-100,App keeps crashing,email,2026-03-20T10:00:00Z
+FB-002,CUST-101,App keeps crashing,email,2026-03-20T11:00:00Z
+FB-003,CUST-102,Love the new dashboard,twitter,2026-03-20T12:00:00Z
+FB-004,CUST-103,Checkout fails,email,2026-03-20T13:00:00Z
+FB-005,CUST-104,Checkout fails,email,2026-03-20T14:00:00Z
+FB-006,CUST-105,How to reset password?,zendesk,2026-03-20T15:00:00Z
+FB-007,CUST-106,Performance is slow,discord,2026-03-20T16:00:00Z
+FB-008,CUST-107,Amazing product!,twitter,2026-03-20T17:00:00Z

@@ -1,0 +1,6 @@
+{"prompt": "App keeps crashing", "completion": "negative|bug|critical"}
+{"prompt": "Love the new dashboard", "completion": "positive|feature|high"}
+{"prompt": "Checkout fails", "completion": "negative|bug|critical"}
+{"prompt": "How to reset password?", "completion": "neutral|support|medium"}
+{"prompt": "Performance is slow", "completion": "negative|performance|high"}
+{"prompt": "Amazing product!", "completion": "positive|feature|high"}
