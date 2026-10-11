@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --color-dark-gray: #0f172a;
+    --color-muted-gray: #475569;
+    --color-border-subtle: #e2e8f0;
+    --color-bg-light: #f8fafc;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #f8fafc;
+    color: #0f172a;
+    overflow-x: hidden;
+    min-height: 100vh;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.55;
+    background-size: 32px 32px;
+    background-image: 
+      linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Make headings naturally bolder and punchier */
+  h1, h2, h3, h4, h5, h6 {
+    color: #0f172a;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+}
+
+/* Floating Glass Navbar - Translucent, Sticky to Top */
+.floating-navbar {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
+  border-radius: 9999px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-navbar:hover {
+  border-color: rgba(203, 213, 225, 1);
+  box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.08);
+}
+
+/* Clean High-Contrast Cards */
+.insight-card, .adaption-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02);
+  transition: all 0.2s ease;
+}
+
+.insight-card:hover, .adaption-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+.insight-input, .adaption-input {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  border-radius: 10px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.insight-input:focus, .adaption-input:focus {
+  border-color: #0f172a;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+}
+
+.btn-primary-pill, .btn-adaption-dark {
+  background-color: #0f172a;
+  color: #ffffff;
+  border-radius: 9999px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary-pill:hover, .btn-adaption-dark:hover {
+  background-color: #1e293b;
+  transform: translateY(-1px);
+}
+
+.btn-outline-pill, .btn-adaption-outline {
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  font-weight: 550;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-outline-pill:hover, .btn-adaption-outline:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+/* Custom Minimal Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
