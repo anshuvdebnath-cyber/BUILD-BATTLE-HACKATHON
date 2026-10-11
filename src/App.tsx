@@ -14,12 +14,12 @@ const MainContent: React.FC = () => {
   const { activeTab } = useApp();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-[#0f172a] selection:bg-blue-500 selection:text-white">
-      {/* Floating 3-Island Header / Navbar (Exact Adaption Labs Style) */}
+    <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] selection:bg-blue-500 selection:text-white flex flex-col md:pl-72">
+      {/* Transparent Left Sidebar with Responsive Mobile Header */}
       <Navbar />
 
-      {/* Main Content View Container with padding to clear the fixed floating navbar */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24 pb-12">
+      {/* Main Content View Container with generous padding and spacing */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-20 md:pt-8 pb-12">
         {activeTab === 'overview' && <OverviewView />}
         {activeTab === 'feedbacks' && <FeedbackView />}
         {activeTab === 'adaption-studio' && <AdaptionStudioView />}
@@ -29,7 +29,7 @@ const MainContent: React.FC = () => {
         {activeTab === 'executive-report' && <ExecutiveReportView />}
       </main>
 
-      {/* Full Adaption Labs-style Footer */}
+      {/* Clean Modern Footer */}
       <Footer />
     </div>
   );
