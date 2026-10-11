@@ -16,7 +16,7 @@ const MainContent: React.FC = () => {
   const { activeTab } = useApp();
 
   return (
-    <div className="relative min-h-screen bg-[#f8fafc] text-[#090d16] selection:bg-slate-900 selection:text-white flex flex-col font-sans">
+    <div className="relative min-h-screen bg-transparent text-[#090d16] selection:bg-purple-900 selection:text-white flex flex-col font-sans">
       {/* Dynamic Animated Chromatic Mesh Shaders (Adaption Labs Style) */}
       <BackgroundShader />
 

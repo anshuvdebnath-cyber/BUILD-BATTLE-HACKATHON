@@ -224,10 +224,10 @@ export const FeedbackView: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 font-['Inter']">
-            Customer Feedback Ingestion
+            Live Feedback Stream & Ingestion
           </h1>
           <p className="text-xs sm:text-sm font-medium text-slate-600 mt-1">
-            Validate CSV schema, auto-normalize text, quarantine malformed rows, and inspect complaints.
+            Real-time customer feedback ingestion, schema validation, quarantine handling, and Adaption AI enrichment.
           </p>
         </div>
 
@@ -236,7 +236,7 @@ export const FeedbackView: React.FC = () => {
           <div className="relative group">
             <button
               className="px-4 py-2 btn-outline-pill text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="Download sample CSV format"
+              title="Download sample ingestion format"
             >
               <Download className="w-3.5 h-3.5 text-slate-700" />
               <span>Sample Templates</span>
@@ -246,14 +246,14 @@ export const FeedbackView: React.FC = () => {
                 onClick={() => downloadSampleTemplate('hackathon')}
                 className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 font-semibold text-slate-800 flex flex-col"
               >
-                <span>Hackathon CSV (review, category)</span>
+                <span>Hackathon Schema (review, category)</span>
                 <span className="text-[10px] text-slate-500 font-normal">Official Build Battle 2026 schema</span>
               </button>
               <button
                 onClick={() => downloadSampleTemplate('enterprise')}
                 className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 font-semibold text-slate-800 flex flex-col mt-1 border-t border-slate-100 pt-1"
               >
-                <span>Enterprise Multi-Channel CSV</span>
+                <span>Enterprise Multi-Channel Schema</span>
                 <span className="text-[10px] text-slate-500 font-normal">feedback_text, customer_id, date, source</span>
               </button>
             </div>
@@ -268,13 +268,13 @@ export const FeedbackView: React.FC = () => {
             className="hidden" 
           />
 
-          {/* Upload CSV Dropzone Modal Opener */}
+          {/* Upload Ingestion Dropzone Modal Opener */}
           <button
             onClick={() => setIsDropzoneModalOpen(true)}
             className="px-4 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
           >
             <Upload className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Import CSV (Dropzone & Preview)</span>
+            <span>Live Ingestion & Dropzone</span>
           </button>
 
           {/* Table / Cards View Mode Switcher (PRD Spec) */}

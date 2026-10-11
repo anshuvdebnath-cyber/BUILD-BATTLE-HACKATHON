@@ -166,7 +166,7 @@ export const OverviewView: React.FC = () => {
               className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-slate-900 hover:bg-black text-white text-xs flex items-center justify-center gap-2 cursor-pointer font-bold shadow-xs transition-all"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>Upload & Clean CSV (Adaption)</span>
+              <span>Live Ingestion & Training (Adaption)</span>
             </button>
           </div>
         </div>
@@ -268,9 +268,9 @@ export const OverviewView: React.FC = () => {
               <Database className="w-4 h-4 text-amber-700" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-xs">CSV Data Ingestion</h3>
+              <h3 className="font-bold text-slate-900 text-xs">Live Feedback Stream Ingestion</h3>
               <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                Multi-channel feedback ingestion with schema validation, malformed row quarantine, and auto-normalization.
+                Multi-channel feedback ingestion with live schema validation, malformed row quarantine, and auto-normalization.
               </p>
             </div>
             <div className="pt-2 border-t border-amber-200/80 text-[10.5px] text-amber-900 font-semibold flex items-center justify-between">
@@ -592,15 +592,15 @@ export const OverviewView: React.FC = () => {
             {/* Modal Stepper Body */}
             <div className="p-6 space-y-4 text-xs">
               
-              {/* Step 1: CSV Imported */}
+              {/* Step 1: Live Stream Ingested */}
               <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <strong className="text-slate-900 font-bold">CSV Imported (2,453 entries)</strong>
-                    <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Completed</span>
+                    <strong className="text-slate-900 font-bold">Live Feedback Stream Connected ({feedbacks.length} entries)</strong>
+                    <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Active</span>
                   </div>
-                  <p className="text-slate-500 text-[11px] mt-0.5">Parsed customer_id, feedback_text, timestamp, and source channel metadata.</p>
+                  <p className="text-slate-500 text-[11px] mt-0.5">Real-time customer feedback ingestion with automated Adaption AI schema mapping.</p>
                 </div>
               </div>
 

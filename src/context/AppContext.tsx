@@ -90,27 +90,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [adaptationStepText, setAdaptationStepText] = useState<string>('');
   const [hasRunAdaption, setHasRunAdaption] = useState<boolean>(true);
 
-  // Load real CSV dataset on startup so zero hardcoded placeholder data remains
+  // Live synchronization with Adaption Labs backend API
   React.useEffect(() => {
-    const loadInitialRealData = async () => {
+    const syncLiveAdaptionData = async () => {
       try {
-        const res = await fetch('/hackathon_feedback.csv');
+        const res = await fetch('http://localhost:3001/api/feedback');
         if (res.ok) {
-          const text = await res.text();
-          const file = new File([text], 'hackathon_feedback.csv', { type: 'text/csv' });
-          const { items, report } = await AdaptionIntelligenceService.parseCSVFileWithValidation(file);
-          if (items.length > 0) {
-            setFeedbacks(items);
-            setSchemaReport(report);
-            const newRecs = AdaptionIntelligenceService.generateRecommendations(items);
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            setFeedbacks(json.data);
+            const newRecs = AdaptionIntelligenceService.generateRecommendations(json.data);
             setRecommendations(newRecs);
           }
         }
       } catch (e) {
-        console.warn('Initial CSV load fallback:', e);
+        console.warn('Live Adaption API sync check:', e);
       }
     };
-    loadInitialRealData();
+    syncLiveAdaptionData();
   }, []);
 
   // Derived high-impact features

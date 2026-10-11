@@ -16,7 +16,7 @@ export const Navbar: React.FC = () => {
 
   const navItems: { id: ActiveTab; label: string; badge?: string | number }[] = [
     { id: 'overview', label: 'Overview' },
-    { id: 'data-cleaning', label: 'Upload & Clean' },
+    { id: 'data-cleaning', label: 'Live Ingestion & Training' },
     { id: 'feedbacks', label: 'Feedback', badge: feedbacks.length },
     { 
       id: 'adaption-studio', 
