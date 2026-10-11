@@ -152,11 +152,17 @@ export function DataCleaning() {
     }
   };
 
-  const loadPresetDataset = (presetId: 'Build Battle 2026 (Official)' | 'CloudScale SaaS' | 'FinPay Banking') => {
-    loadPreset(presetId);
-    setFile(new File(["sample"], `${presetId.toLowerCase().replace(/[^a-z0-9]/g, '_')}.csv`, { type: "text/csv" }));
-    setPipelineResult(null);
-    setError(null);
+  const loadPresetDataset = async (presetId: 'Build Battle 2026 (Official)' | 'CloudScale SaaS' | 'FinPay Banking') => {
+    try {
+      const res = await fetch('/hackathon_feedback.csv');
+      const text = await res.text();
+      const fileName = `${presetId.toLowerCase().replace(/[^a-z0-9]/g, '_')}.csv`;
+      const realFile = new File([text], fileName, { type: 'text/csv' });
+      await handleFileSelection(realFile);
+      loadPreset(presetId);
+    } catch {
+      loadPreset(presetId);
+    }
   };
 
   return (
