@@ -1,9 +1,10 @@
 export type CustomerTier = 'Enterprise' | 'Pro' | 'Starter' | 'Free';
 
 export type FeedbackSource = 
-  | 'Email'
-  | 'Survey'
   | 'Review'
+  | 'Survey'
+  | 'Support'
+  | 'Email'
   | 'Chat'
   | 'Zendesk Ticket' 
   | 'App Store Review' 
@@ -15,6 +16,13 @@ export type FeedbackSource =
 export type SentimentType = 'positive' | 'negative' | 'neutral' | 'mixed';
 
 export type IssueCategory = 
+  | 'Reliability'
+  | 'Performance'
+  | 'Pricing'
+  | 'UI/UX'
+  | 'Support'
+  | 'Features'
+  | 'Onboarding'
   | 'Fraud and Scam'
   | 'Operational Issues'
   | 'Customer Service'

@@ -15,7 +15,8 @@ import {
   HACKATHON_OFFICIAL_DATASET, 
   HACKATHON_QUALITY_METRICS, 
   HACKATHON_RECOMMENDATIONS,
-  INITIAL_QUALITY_METRICS
+  INITIAL_QUALITY_METRICS,
+  SCREENSHOT_FEEDBACK_DATASET
 } from '../data/mockData';
 import { AdaptionIntelligenceService } from '../services/adaptionService';
 import confetti from 'canvas-confetti';
@@ -58,8 +59,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
-  // Starts completely empty until live ingested & trained through Adaption
-  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
+  // Initialize with exact dataset from screenshot, dynamically reactive to live backend
+  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(SCREENSHOT_FEEDBACK_DATASET);
   const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
   const [qualityMetrics, setQualityMetrics] = useState<AdaptionQualityMetrics>(INITIAL_QUALITY_METRICS);
   const [schemaReport, setSchemaReport] = useState<SchemaValidationReport | null>(null);
