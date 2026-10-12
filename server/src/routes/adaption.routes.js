@@ -132,6 +132,7 @@ Return strictly a valid JSON array of objects with keys:
 - productCountermeasure: string (1-2 sentences on customer retention / UX fallback)
 - estArrAtRisk: number`;
 
+        const groqModel = "openai/gpt-oss-20b";
         const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -139,18 +140,23 @@ Return strictly a valid JSON array of objects with keys:
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: [{ role: "user", content: prompt }],
-            response_format: { type: "json_object" },
+            model: groqModel,
+            messages: [{ role: "user", content: prompt + "\nStrictly output valid raw JSON with a 'solutions' array." }],
             temperature: 0.3
           })
         });
 
         if (groqRes.ok) {
           const data = await groqRes.json();
-          const content = JSON.parse(data.choices[0].message.content);
+          const raw = data.choices[0].message.content;
+          // Extract JSON block if surrounded by markdown fences
+          const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const content = JSON.parse(cleaned);
           const solutions = Array.isArray(content) ? content : (content.solutions || Object.values(content)[0]);
-          return res.json({ success: true, provider: "groq-llama-3.3-70b", solutions });
+          return res.json({ success: true, provider: "groq-ai", solutions });
+        } else {
+          const errText = await groqRes.text();
+          console.warn("Groq API returned error status:", groqRes.status, errText);
         }
       } catch (err) {
         console.warn("Groq live inference failed, using built-in model:", err.message);
