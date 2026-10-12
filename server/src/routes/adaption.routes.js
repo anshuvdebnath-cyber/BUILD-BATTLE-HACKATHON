@@ -148,9 +148,14 @@ Return strictly a valid JSON array of objects with keys:
 
         if (groqRes.ok) {
           const data = await groqRes.json();
-          const raw = data.choices[0].message.content;
-          // Extract JSON block if surrounded by markdown fences
-          const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const raw = data.choices?.[0]?.message?.content || "";
+          let cleaned = raw.trim();
+          const jsonMatch = cleaned.match(/\[\s*\{[\s\S]*\}\s*\]/) || cleaned.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            cleaned = jsonMatch[0];
+          } else {
+            cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '').trim();
+          }
           const content = JSON.parse(cleaned);
           const solutions = Array.isArray(content) ? content : (content.solutions || Object.values(content)[0]);
           return res.json({ success: true, provider: "groq-ai", solutions });

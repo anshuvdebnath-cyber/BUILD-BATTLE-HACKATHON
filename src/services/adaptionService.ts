@@ -81,18 +81,69 @@ export class AdaptionIntelligenceService {
             const seenTexts = new Set<string>();
             let duplicatesCount = 0;
 
+            const isIdLike = (k: string) => {
+              const clean = k.trim().toLowerCase();
+              return clean === 'id' ||
+                     clean.endsWith('_id') ||
+                     clean.endsWith('id') ||
+                     clean.endsWith('_num') ||
+                     clean.endsWith('_no') ||
+                     clean.endsWith('_key') ||
+                     clean.endsWith('_code') ||
+                     clean === 'index' ||
+                     clean === 'row';
+            };
+
             rawRows.forEach((row, idx) => {
               const rowNum = idx + 1;
 
-              // Extract text field with column auto-discovery
-              const textKey = Object.keys(row).find(k => 
-                /feedback_text|feedback|comment|text|message|body|review|description/i.test(k)
-              ) || Object.keys(row)[0];
+              // Extract text field with robust column auto-discovery (explicitly avoiding ID columns)
+              const candidateKeys = Object.keys(row);
+              
+              // 1. High-priority exact text headers
+              const exactTextHeaders = [
+                'feedback_text', 'text', 'comment', 'review', 'feedback', 
+                'message', 'body', 'description', 'content', 'issue', 
+                'complaint', 'user_feedback', 'review_text', 'notes', 'summary'
+              ];
+              let textKey = candidateKeys.find(k => {
+                const norm = k.trim().toLowerCase();
+                return !isIdLike(norm) && exactTextHeaders.includes(norm);
+              });
+
+              // 2. Substring match on text concepts (excluding ID columns)
+              if (!textKey) {
+                textKey = candidateKeys.find(k => {
+                  const norm = k.trim().toLowerCase();
+                  return !isIdLike(norm) && /(feedback|review|comment|text|message|body|description|content|complaint|issue)/i.test(k);
+                });
+              }
+
+              // 3. Content heuristic: pick the column with longest average string length that isn't an ID
+              if (!textKey) {
+                let longestCol = '';
+                let maxLen = 0;
+                for (const k of candidateKeys) {
+                  if (!isIdLike(k)) {
+                    const val = String(row[k] || '').trim();
+                    if (val.length > maxLen) {
+                      maxLen = val.length;
+                      longestCol = k;
+                    }
+                  }
+                }
+                if (longestCol && maxLen >= 3) {
+                  textKey = longestCol;
+                }
+              }
+
+              // Final fallback
+              if (!textKey) textKey = candidateKeys.find(k => !isIdLike(k)) || candidateKeys[0];
 
               const rawTextVal = textKey ? row[textKey] : '';
 
-              // Quarantine criteria: completely empty text or fewer than 3 characters
-              if (!rawTextVal || rawTextVal.trim().length < 3) {
+              // Quarantine criteria: completely empty text or fewer than 2 characters
+              if (!rawTextVal || String(rawTextVal).trim().length < 2) {
                 quarantinedItems.push({
                   rowNumber: rowNum,
                   rawContent: JSON.stringify(row),
@@ -102,7 +153,7 @@ export class AdaptionIntelligenceService {
               }
 
               // Text Normalization
-              const { normalizedText, expandedCount } = this.normalizeText(rawTextVal);
+              const { normalizedText, expandedCount } = this.normalizeText(String(rawTextVal));
               if (expandedCount > 0) totalNormalized++;
 
               // Duplicate detection
@@ -116,30 +167,38 @@ export class AdaptionIntelligenceService {
               }
 
               // Extract customer ID or name
-              const customerKey = Object.keys(row).find(k => 
-                /customer_id|customer|user|name|author|account/i.test(k)
-              );
-              const customerId = customerKey && row[customerKey] ? row[customerKey] : `CUST-${1000 + rowNum}`;
+              const customerKey = candidateKeys.find(k => {
+                const norm = k.trim().toLowerCase();
+                return /customer_id|customer|user_id|user|author|client|account|email|name/i.test(norm);
+              });
+              const customerId = customerKey && row[customerKey] ? String(row[customerKey]) : `CUST-${1000 + rowNum}`;
 
               // Extract date
-              const dateKey = Object.keys(row).find(k => /date|timestamp|time|created/i.test(k));
-              const dateVal = dateKey && row[dateKey] ? row[dateKey] : new Date().toISOString().split('T')[0];
+              const dateKey = candidateKeys.find(k => /date|timestamp|time|created/i.test(k));
+              const dateVal = dateKey && row[dateKey] ? String(row[dateKey]) : new Date().toISOString().split('T')[0];
 
               // Extract source
-              const sourceKey = Object.keys(row).find(k => /source|channel|medium/i.test(k));
+              const sourceKey = candidateKeys.find(k => /source|channel|medium|platform/i.test(k));
               const sourceVal: FeedbackSource = (sourceKey && row[sourceKey] as any) || 'CSV Upload';
 
-              // Extract rating / sentiment
-              const ratingKey = Object.keys(row).find(k => /rating|score|stars/i.test(k));
+              // Extract rating
+              const ratingKey = candidateKeys.find(k => /rating|score|stars|nps|csat/i.test(k));
               const explicitRating = ratingKey && !isNaN(Number(row[ratingKey])) 
                 ? Math.min(5, Math.max(1, Math.round(Number(row[ratingKey])))) 
                 : undefined;
 
-              const detectedSentiment = this.analyzeSentiment(normalizedText, explicitRating);
+              // Extract explicit sentiment column if provided by user CSV
+              const sentimentColKey = candidateKeys.find(k => /^(sentiment|sentiment_type|polarity|mood)$/i.test(k.trim()));
+              const explicitSentimentVal = sentimentColKey && row[sentimentColKey] ? String(row[sentimentColKey]).trim().toLowerCase() : undefined;
+
+              const detectedSentiment = this.analyzeSentiment(normalizedText, explicitRating, explicitSentimentVal);
               const rating = explicitRating || (detectedSentiment.score <= -0.3 ? 2 : detectedSentiment.score >= 0.3 ? 5 : 3);
 
               // Extract category
-              const categoryKey = Object.keys(row).find(k => /category|type|tag|dept/i.test(k));
+              const categoryKey = candidateKeys.find(k => {
+                const norm = k.trim().toLowerCase();
+                return !isIdLike(norm) && /category|topic|type|tag|issue_type|module|feature|department|dept/i.test(norm);
+              });
               const detectedCategory = categoryKey && row[categoryKey] 
                 ? (row[categoryKey] as IssueCategory) 
                 : this.inferCategory(normalizedText);
@@ -150,7 +209,7 @@ export class AdaptionIntelligenceService {
 
               parsedItems.push({
                 id: `CSV-${rowNum}`,
-                customerName: customerId.includes('CUST') ? `Account #${customerId.replace(/\D/g, '')}` : customerId,
+                customerName: customerId.includes('CUST') ? `Account #${customerId.replace(/\D/g, '') || rowNum}` : customerId,
                 customerEmail: `support+${rowNum}@clienthub.org`,
                 customerTier,
                 source: sourceVal,
@@ -159,7 +218,7 @@ export class AdaptionIntelligenceService {
                 sentiment: detectedSentiment.type,
                 sentimentScore: detectedSentiment.score,
                 category: detectedCategory,
-                urgency: (rating <= 2 || detectedCategory === 'Fraud and Scam') ? 'critical' : rating === 3 ? 'medium' : 'low',
+                urgency: (rating <= 2 || detectedCategory === 'Fraud and Scam' || detectedSentiment.type === 'negative') ? 'critical' : rating === 3 ? 'medium' : 'low',
                 arrValue,
                 timestamp: dateVal,
                 adaptedPrompt: `Investigate customer issue: ${normalizedText.slice(0, 95)}...`,
@@ -200,47 +259,131 @@ export class AdaptionIntelligenceService {
   }
 
   /**
-   * Rule-based lightweight sentiment analyzer
+   * Rule-based lightweight sentiment analyzer supporting explicit sentiment tags, ratings, and rich lexicon
    */
-  static analyzeSentiment(text: string, rating?: number): { type: SentimentType; score: number } {
+  static analyzeSentiment(
+    text: string, 
+    rating?: number, 
+    explicitSentiment?: string
+  ): { type: SentimentType; score: number } {
+    // 1. Direct explicit sentiment override if specified in CSV
+    if (explicitSentiment) {
+      if (/pos|good|happy|promoter/i.test(explicitSentiment)) {
+        return { type: 'positive', score: 0.85 };
+      }
+      if (/neg|bad|unhappy|detractor|churn/i.test(explicitSentiment)) {
+        return { type: 'negative', score: -0.85 };
+      }
+      if (/mix/i.test(explicitSentiment)) {
+        return { type: 'mixed', score: 0.0 };
+      }
+      if (/neu/i.test(explicitSentiment)) {
+        return { type: 'neutral', score: 0.0 };
+      }
+    }
+
     const lower = text.toLowerCase();
-    const negativeKeywords = ['broken', 'bug', 'fail', 'error', 'locked out', 'slow', 'timeout', 'crash', 'awful', 'terrible', 'drop', 'unusable', 'charged twice'];
-    const positiveKeywords = ['faster', 'love', 'great', 'awesome', 'excellent', 'flawless', 'smooth', 'helpful', 'clean', 'best'];
+    
+    // Comprehensive lexicon for real customer feedback
+    const negativeKeywords = [
+      'crash', 'crashing', 'crashes', 'fail', 'fails', 'failed', 'failing', 
+      'broken', 'break', 'breaks', 'bug', 'bugs', 'buggy', 'error', 'errors', 
+      'locked out', 'slow', 'slowly', 'sluggish', 'timeout', 'timed out', 
+      'latency', 'lag', 'lagging', 'awful', 'terrible', 'drop', 'dropped', 
+      'unusable', 'charged twice', 'overcharged', 'worst', 'bad', 'poor', 
+      'hate', 'issue', 'issues', 'problem', 'problems', 'glitch', 'glitches', 
+      'frustrated', 'frustrating', 'disappointed', 'cannot', "can't", 
+      "doesn't work", "wont", "won't", 'stuck', 'freeze', 'freezes', 
+      'freezing', 'loss', 'lost', 'down', 'outage', 'unresponsive', 'horrible',
+      'confusing', 'hard to use', 'expensive', 'useless', 'garbage', 'broken'
+    ];
+
+    const positiveKeywords = [
+      'faster', 'fast', 'love', 'loved', 'loves', 'great', 'awesome', 
+      'excellent', 'flawless', 'smooth', 'smoothly', 'helpful', 'clean', 
+      'best', 'amazing', 'good', 'super', 'easy', 'perfect', 'enjoy', 
+      'pleased', 'fantastic', 'wonderful', 'impressive', 'brilliant', 
+      'stellar', 'intuitive', 'reliable', 'quick', 'kudos', 'appreciate', 
+      'thank', 'thanks', 'cool', 'solid', 'delight', 'delighted', 'valuable'
+    ];
 
     let score = 0;
     if (rating) {
-      score += (rating - 3) * 0.3; // -0.6 to +0.6
+      score += (rating - 3) * 0.35; // -0.7 to +0.7
     }
 
     negativeKeywords.forEach(word => {
-      if (lower.includes(word)) score -= 0.25;
+      if (lower.includes(word)) score -= 0.35;
     });
 
     positiveKeywords.forEach(word => {
-      if (lower.includes(word)) score += 0.25;
+      if (lower.includes(word)) score += 0.35;
     });
 
     score = Math.max(-1.0, Math.min(1.0, score));
 
     let type: SentimentType = 'neutral';
-    if (score <= -0.2) type = 'negative';
-    else if (score >= 0.2) type = 'positive';
-    else if (lower.includes('but') || lower.includes('however')) type = 'mixed';
+    if (score <= -0.15) type = 'negative';
+    else if (score >= 0.15) type = 'positive';
+    else if (lower.includes('but') || lower.includes('however') || lower.includes('although')) type = 'mixed';
 
     return { type, score: Number(score.toFixed(2)) };
   }
 
   /**
-   * Category inference
+   * Comprehensive Category inference covering core operational domains
    */
   static inferCategory(text: string): IssueCategory {
     const lower = text.toLowerCase();
-    if (/sso|saml|okta|login|auth|password|token/i.test(lower)) return 'Authentication & SSO';
-    if (/webhook|api|endpoint|graphql|sdk|rest/i.test(lower)) return 'API & Webhooks';
-    if (/charge|bill|invoice|prorate|stripe|cost|refund/i.test(lower)) return 'Billing & Invoicing';
-    if (/latency|slow|timeout|lag|speed|delay|2000ms/i.test(lower)) return 'Performance & Latency';
-    if (/export|csv|download|report|audit log/i.test(lower)) return 'Reporting & Export';
-    return 'UI & Usability';
+    // Reliability & Crashes
+    if (/crash|freeze|hang|stuck|exception|500|broken|down|outage|unresponsive|closing|shut down|reboot/i.test(lower)) {
+      return 'Reliability';
+    }
+    // Performance & Speed
+    if (/latency|slow|timeout|lag|speed|delay|sluggish|load time|2000ms|spinning|loading/i.test(lower)) {
+      return 'Performance';
+    }
+    // Billing, Payments & Checkout
+    if (/charge|bill|invoice|prorate|stripe|cost|refund|price|pricing|expensive|subscription|checkout|payment|card|purchase|receipt/i.test(lower)) {
+      return 'Billing & Invoicing';
+    }
+    // Authentication, Login & Access
+    if (/sso|saml|okta|login|auth|password|token|2fa|mfa|account|reset password|locked|sign in|access/i.test(lower)) {
+      return 'Authentication & SSO';
+    }
+    // API & Webhooks
+    if (/webhook|api|endpoint|graphql|sdk|rest|integration|sync|curl|json|payload/i.test(lower)) {
+      return 'API & Webhooks';
+    }
+    // Reporting & Data Export
+    if (/export|csv|download|report|audit log|excel|sheets|pdf/i.test(lower)) {
+      return 'Reporting & Export';
+    }
+    // Customer Support & Service
+    if (/agent|representative|rep|help desk|ticket|support|contact|waiting|human|unhelpful|call/i.test(lower)) {
+      return 'Customer Service';
+    }
+    // Onboarding & Getting Started
+    if (/onboard|setup|getting started|tutorial|invite|welcome|guide|first time|documentation/i.test(lower)) {
+      return 'Onboarding';
+    }
+    // Security & Fraud
+    if (/scam|fraud|phish|stolen|unauthorized|hacked|suspicious|breach/i.test(lower)) {
+      return 'Fraud and Scam';
+    }
+    // Feature Requests
+    if (/feature|request|please add|wish|suggestion|dark mode|integrate|would be great/i.test(lower)) {
+      return 'Features';
+    }
+    // Positive General Product Feedback
+    if (/love|great|amazing|awesome|flawless|clean|smooth|product|recommend|happy/i.test(lower)) {
+      return 'Product Feedback';
+    }
+    // UI & Usability
+    if (/ui|ux|button|navigation|layout|confusing|cluttered|font|mobile view|interface|click/i.test(lower)) {
+      return 'UI & Usability';
+    }
+    return 'Operational Issues';
   }
 
   /**

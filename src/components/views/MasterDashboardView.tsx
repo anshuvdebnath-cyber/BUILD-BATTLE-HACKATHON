@@ -411,32 +411,42 @@ export const MasterDashboardView: React.FC = () => {
 
       try {
         // Step 1: CSV Ingestion & Structural Validation
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 500));
         setPipelineStepIndex(1);
 
         // Step 2: Adaption Hygiene & Deduplication
-        await new Promise(r => setTimeout(r, 750));
+        await new Promise(r => setTimeout(r, 650));
         setPipelineStepIndex(2);
 
         // Step 3: Embeddings & Backend CSV Ingestion
-        await handleCSVUpload(file);
+        const uploadedItems = await handleCSVUpload(file);
         setPipelineStepIndex(3);
 
         // Step 4: AutoScientist Neural Inference
-        await new Promise(r => setTimeout(r, 900));
+        await new Promise(r => setTimeout(r, 700));
         setPipelineStepIndex(4);
 
         // Step 5: Synthesis of Decision Matrix
-        await new Promise(r => setTimeout(r, 650));
+        await new Promise(r => setTimeout(r, 550));
         setPipelineStepIndex(5);
 
         // Brief completion celebration before revealing results
-        await new Promise(r => setTimeout(r, 450));
+        await new Promise(r => setTimeout(r, 400));
         setIsProcessingCsv(false);
         showToast('Dataset analyzed & decision matrix generated!', 'success');
+
+        // Automatically synthesize solutions tailored directly to the new dataset's problems
+        if (uploadedItems && uploadedItems.length > 0) {
+          handleGenerateRecommendations(uploadedItems);
+        } else {
+          handleGenerateRecommendations();
+        }
       } catch (err: any) {
         setIsProcessingCsv(false);
         setCsvError(`Failed to process dataset through model: ${err.message || 'Invalid CSV structure or unreadable headers.'}`);
+      } finally {
+        // Reset file input value so re-selecting the same or another file always triggers onChange
+        if (fileInputRef.current) fileInputRef.current.value = '';
       }
     }
   };
@@ -476,13 +486,51 @@ export const MasterDashboardView: React.FC = () => {
 
   const [solutionsProvider, setSolutionsProvider] = useState<string>('adaption');
 
-  const handleGenerateRecommendations = async () => {
+  const handleGenerateRecommendations = async (customFeedbacks?: FeedbackItem[]) => {
+    const sourceFeedbacks = customFeedbacks && customFeedbacks.length > 0 ? customFeedbacks : feedbacks;
+    if (sourceFeedbacks.length === 0) {
+      showToast('Upload a CSV or submit feedback first to generate solutions', 'info');
+      return;
+    }
     setIsGeneratingRecs(true);
+
+    // Group actual issues and extract real feedback snippets from the uploaded dataset
+    const negMap: Record<string, { count: number; sampleTexts: string[] }> = {};
+    sourceFeedbacks.forEach(f => {
+      if (f.sentiment === 'negative' || f.rating <= 2) {
+        const cat = f.category || 'Reliability';
+        if (!negMap[cat]) negMap[cat] = { count: 0, sampleTexts: [] };
+        negMap[cat].count++;
+        if (f.rawText && negMap[cat].sampleTexts.length < 3) {
+          negMap[cat].sampleTexts.push(f.rawText);
+        }
+      }
+    });
+
+    // Fallback: if no negative items, use general categories
+    if (Object.keys(negMap).length === 0) {
+      sourceFeedbacks.slice(0, 4).forEach(f => {
+        const cat = f.category || 'Product Feedback';
+        if (!negMap[cat]) negMap[cat] = { count: 1, sampleTexts: [f.rawText || ''] };
+      });
+    }
+
+    const issuesPayload = Object.entries(negMap)
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 4)
+      .map(([topic, data], idx) => ({
+        rank: idx + 1,
+        topic,
+        negCount: data.count,
+        sampleFeedback: data.sampleTexts,
+        whyPrioritize: `Topic "${topic}" has ${data.count} friction reports. User quotes: "${data.sampleTexts[0] || 'Recurring friction'}"`
+      }));
+
     try {
       const res = await fetch('http://localhost:3001/api/adaption/solutions/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ issues: priorityIssues })
+        body: JSON.stringify({ issues: issuesPayload })
       });
 
       if (res.ok) {
@@ -490,10 +538,10 @@ export const MasterDashboardView: React.FC = () => {
         if (data.solutions && Array.isArray(data.solutions) && data.solutions.length > 0) {
           const formatted: StrategicSolution[] = data.solutions.map((s: any, idx: number) => ({
             id: s.id || `ai-sol-${idx}`,
-            topic: s.topic || priorityIssues[idx]?.topic || `Issue #${idx + 1}`,
+            topic: s.topic || issuesPayload[idx]?.topic || `Issue #${idx + 1}`,
             severity: (s.severity as any) || (idx === 0 ? 'Critical' : 'High'),
-            negCount: s.negCount || priorityIssues[idx]?.negCount || 10,
-            estArrAtRisk: s.estArrAtRisk || (priorityIssues[idx]?.negCount || 10) * 14200,
+            negCount: s.negCount || issuesPayload[idx]?.negCount || 5,
+            estArrAtRisk: s.estArrAtRisk || (issuesPayload[idx]?.negCount || 5) * 14200,
             targetSla: s.targetSla || '24h Hotfix',
             rootCause: s.rootCause || 'Root cause analyzed via AI reasoning.',
             engineeringFix: s.engineeringFix || 'Deploy architectural fix and add regression test coverage.',
@@ -501,7 +549,7 @@ export const MasterDashboardView: React.FC = () => {
           }));
           setSolutionsList(formatted);
           setSolutionsProvider(data.provider || 'groq');
-          showToast(`Generated solutions via ${data.provider === 'groq-llama-3.3-70b' ? 'Groq Llama 3.3 70B' : 'AutoScientist'}!`, 'success');
+          showToast(`Generated solutions tailored to your uploaded dataset!`, 'success');
           setIsGeneratingRecs(false);
           return;
         }
@@ -510,12 +558,55 @@ export const MasterDashboardView: React.FC = () => {
       console.warn('AI solutions endpoint fallback:', e);
     }
 
-    // Default domain intelligence generator
-    await new Promise(r => setTimeout(r, 900));
-    setSolutionsList(strategicSolutions);
+    // Dynamic domain intelligence generator formulated from actual customer quotes in the uploaded file
+    await new Promise(r => setTimeout(r, 650));
+    const dynamicSolutions: StrategicSolution[] = issuesPayload.map((iss, idx) => {
+      const topicLower = iss.topic.toLowerCase();
+      const quote = iss.sampleFeedback[0] ? ` ("${iss.sampleFeedback[0]}")` : '';
+      let targetSla = idx === 0 ? '24h Hotfix' : idx === 1 ? '48h Sprint' : '3-Day Sprint';
+      let rootCause = `Users encountering recurring blockers in ${iss.topic}${quote}. Telemetry indicates user drop-off during critical workflows.`;
+      let engineeringFix = `Deploy targeted regression test guardrails for ${iss.topic}, profile error logs, and optimize query latency to resolve user complaints.`;
+      let productCountermeasure = `Implement transparent UI error fallback states, update customer docs, and establish a real-time monitor alert.`;
+
+      if (/crash|freeze|reliab|break/i.test(topicLower)) {
+        targetSla = '24h Hotfix';
+        rootCause = `Unhandled state exceptions and memory spikes triggering client-side thread termination${quote}.`;
+        engineeringFix = `Wrap state handlers in global ErrorBoundary, patch uncaught exceptions, and stream crash dumps to Sentry with device metadata.`;
+        productCountermeasure = `Auto-recover user session state upon crash reboot; alert customer support on high-frequency account crashes.`;
+      } else if (/checkout|pay|bill|stripe|price|card/i.test(topicLower)) {
+        targetSla = '24h Hotfix';
+        rootCause = `Payment gateway webhook timeout and 3DS authorization drops causing transaction abandonment${quote}.`;
+        engineeringFix = `Implement backup gateway fallback circuit-breaker, verify idempotent transaction tokens, and log gateway latency.`;
+        productCountermeasure = `Render clear transactional retry prompts with 1-click recovery; notify account executives for at-risk enterprise subscriptions.`;
+      } else if (/login|auth|password|sso|token/i.test(topicLower)) {
+        targetSla = '24h Hotfix';
+        rootCause = `Authentication session token expiry race condition and redirect loop drops${quote}.`;
+        engineeringFix = `Implement silent JWT refresh interceptor, preserve in-flight form draft in localStorage, and verify CORS headers.`;
+        productCountermeasure = `Provide instant passwordless magic link recovery; retain unsaved work across re-authentication.`;
+      } else if (/speed|slow|latency|perf/i.test(topicLower)) {
+        targetSla = '48h Sprint';
+        rootCause = `Heavy unindexed aggregate queries and synchronous client-side rendering bottlenecks${quote}.`;
+        engineeringFix = `Introduce Redis caching layer, paginate heavy record queries, and code-split non-critical visualization components.`;
+        productCountermeasure = `Display animated skeleton loaders, defer background computations, and communicate maintenance schedules.`;
+      }
+
+      return {
+        id: `sol-${iss.topic}-${idx}`,
+        topic: iss.topic,
+        severity: idx === 0 ? 'Critical' : idx === 1 ? 'High' : 'Medium',
+        negCount: iss.negCount,
+        estArrAtRisk: iss.negCount * 14200,
+        targetSla,
+        rootCause,
+        engineeringFix,
+        productCountermeasure
+      };
+    });
+
+    setSolutionsList(dynamicSolutions);
     setSolutionsProvider('adaption');
     setIsGeneratingRecs(false);
-    showToast('Generated strategic engineering solutions!', 'success');
+    showToast(`Generated solutions tailored to your uploaded dataset!`, 'success');
   };
 
   // Reusable liquid glassmorphic container style (elevated transparency)
@@ -537,14 +628,18 @@ export const MasterDashboardView: React.FC = () => {
           FULL-SCREEN MULTI-STEP PROGRESSIVE PIPELINE LOADER
           ======================================================== */}
       {isProcessingCsv && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white/95 backdrop-blur-3xl rounded-3xl border border-white/80 p-6 sm:p-8 max-w-lg w-full shadow-[0_25px_70px_rgba(0,0,0,0.35)] space-y-6">
+        <div className="fixed inset-0 z-50 bg-slate-950/45 backdrop-blur-2xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="relative rounded-3xl bg-white/35 backdrop-blur-3xl border border-white/60 p-6 sm:p-8 max-w-lg w-full shadow-[0_25px_80px_rgba(20,10,50,0.25),inset_0_1px_3px_rgba(255,255,255,0.9)] space-y-6 overflow-hidden">
             
+            {/* Ambient Background Light Orbs matching site chromatic shader */}
+            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-purple-500/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+
             {/* Header with AutoScientist Neural Badge */}
-            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+            <div className="relative z-10 flex items-start justify-between gap-3 pb-3 border-b border-white/50">
               <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 text-[11px] font-bold text-indigo-700">
-                  <Sparkles className="w-3.5 h-3.5" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/50 backdrop-blur-md border border-white/70 text-[11px] font-bold text-indigo-900 shadow-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
                   <span>Adaption AutoScientist Engine</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -552,26 +647,42 @@ export const MasterDashboardView: React.FC = () => {
                 </h3>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-black text-indigo-600 font-mono">
+                <span className="text-2xl font-black text-indigo-600 font-mono drop-shadow-xs">
                   {Math.min(100, Math.round(((pipelineStepIndex) / 5) * 100))}%
                 </span>
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Progress</p>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Progress</p>
+              </div>
+            </div>
+
+            {/* Unique Multi-Ring Quantum Gyroscope / Orbital Neural Pulse Loader */}
+            <div className="relative z-10 w-20 h-20 mx-auto flex items-center justify-center my-1">
+              {/* Outer dashed counter-rotating orbital ring */}
+              <div className="absolute inset-0 rounded-full border-2 border-dashed border-indigo-400/50 animate-[spin_9s_linear_infinite_reverse]" />
+              {/* Middle flowing gradient track */}
+              <div className="absolute inset-2 rounded-full border-2 border-transparent border-t-indigo-600 border-r-purple-600 animate-[spin_2s_linear_infinite]" />
+              {/* Orbiting light particle comet */}
+              <div className="absolute inset-2 rounded-full animate-[spin_2s_linear_infinite]">
+                <div className="w-2 h-2 rounded-full bg-indigo-600 shadow-[0_0_12px_rgba(99,102,241,1)] -mt-1 mx-auto" />
+              </div>
+              {/* Inner pulsating crystalline nexus */}
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/40 animate-pulse">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
             </div>
 
             {/* Model Telemetry Strip */}
-            <div className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-600 flex items-center justify-between">
+            <div className="relative z-10 px-3.5 py-2 rounded-xl bg-white/40 backdrop-blur-md border border-white/60 text-[11px] font-mono text-slate-700 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-slate-500">Active Checkpoint:</span>
               </div>
-              <span className="font-bold text-indigo-700 truncate max-w-[220px]" title="adaption_mistral_7b_instruct_cx_feedback_preferences_13088bd2">
+              <span className="font-bold text-indigo-800 truncate max-w-[220px]" title="adaption_mistral_7b_instruct_cx_feedback_preferences_13088bd2">
                 adaption_mistral_7b_13088bd2
               </span>
             </div>
 
-            {/* Step-by-Step Progressive Timeline */}
-            <div className="space-y-3.5 relative pl-2">
+            {/* Step-by-Step Progressive Timeline in Glass Capsules */}
+            <div className="relative z-10 space-y-2.5 pl-2">
               {LOADER_PIPELINE_STEPS.map((step, idx) => {
                 const isCompleted = pipelineStepIndex > idx;
                 const isActive = pipelineStepIndex === idx;
@@ -582,7 +693,7 @@ export const MasterDashboardView: React.FC = () => {
                     {idx < LOADER_PIPELINE_STEPS.length - 1 && (
                       <div 
                         className={`absolute left-[15px] top-[28px] w-0.5 h-[calc(100%-8px)] transition-colors duration-500 ${
-                          isCompleted ? 'bg-emerald-500' : 'bg-slate-200'
+                          isCompleted ? 'bg-emerald-500' : 'bg-slate-300/60'
                         }`} 
                       />
                     )}
@@ -590,40 +701,40 @@ export const MasterDashboardView: React.FC = () => {
                     {/* Step Icon Indicator */}
                     <div className="relative z-10 shrink-0">
                       {isCompleted ? (
-                        <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 transition-all">
+                        <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30 transition-all">
                           <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
                         </div>
                       ) : isActive ? (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-4 ring-indigo-100 animate-pulse">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/40 ring-4 ring-indigo-200/50 animate-pulse">
                           <Loader2 className="w-4 h-4 animate-spin stroke-[2.5]" />
                         </div>
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-400 flex items-center justify-center font-bold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-white/40 border border-white/60 text-slate-500 flex items-center justify-center font-bold text-xs backdrop-blur-xs">
                           {step.id}
                         </div>
                       )}
                     </div>
 
                     {/* Step Content */}
-                    <div className="flex-1 pt-0.5">
+                    <div className="flex-1 pt-0.5 p-2 rounded-xl bg-white/20 backdrop-blur-xs border border-white/30">
                       <div className="flex items-center justify-between">
                         <span className={`text-xs font-bold transition-colors ${
-                          isActive ? 'text-indigo-950 font-extrabold' : isCompleted ? 'text-slate-900 font-bold' : 'text-slate-400'
+                          isActive ? 'text-indigo-950 font-extrabold' : isCompleted ? 'text-slate-900 font-bold' : 'text-slate-500'
                         }`}>
                           {step.title}
                         </span>
                         <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md ${
                           isCompleted 
-                            ? 'bg-emerald-50 text-emerald-700' 
+                            ? 'bg-emerald-100/80 text-emerald-800' 
                             : isActive 
-                            ? 'bg-indigo-50 text-indigo-700 animate-pulse' 
+                            ? 'bg-indigo-100/90 text-indigo-800 animate-pulse' 
                             : 'text-slate-400'
                         }`}>
                           {isCompleted ? 'DONE' : isActive ? 'ACTIVE' : 'QUEUED'}
                         </span>
                       </div>
                       <p className={`text-[11px] mt-0.5 transition-colors ${
-                        isActive ? 'text-slate-700 font-medium' : isCompleted ? 'text-slate-500' : 'text-slate-400'
+                        isActive ? 'text-slate-800 font-medium' : isCompleted ? 'text-slate-600' : 'text-slate-400'
                       }`}>
                         {step.subtitle}
                       </p>
@@ -634,10 +745,10 @@ export const MasterDashboardView: React.FC = () => {
             </div>
 
             {/* Bottom Status text */}
-            <div className="pt-2 border-t border-slate-100 text-center">
-              <p className="text-[11px] text-slate-500 font-medium">
+            <div className="relative z-10 pt-2 border-t border-white/40 text-center">
+              <p className="text-[11px] text-slate-600 font-medium">
                 {pipelineStepIndex >= 5 
-                  ? 'All 5 phases validated. Loading populated analytics dashboard...' 
+                  ? 'All 5 phases validated. Rendering populated analytics dashboard...' 
                   : 'Synthesizing unstructured user voices into strategic priorities...'}
               </p>
             </div>
@@ -858,26 +969,44 @@ export const MasterDashboardView: React.FC = () => {
       </div>
 
       {/* ========================================================
-          3. METRIC STRIP: 3 Summary Cards
+          3. METRIC STRIP: 3 Insightful Summary Cards
           ======================================================== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
         {/* Metric 1: Sentiment Overview */}
-        <div className={`${glassCard} p-6 space-y-3`}>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Sentiment overview
-          </p>
+        <div className={`${glassCard} p-6 space-y-3.5`}>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Sentiment Overview
+            </p>
+            {totalEntries > 0 && (
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                positivePercent >= 60 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                positivePercent >= 40 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
+                'bg-rose-50 text-rose-700 border border-rose-200'
+              }`}>
+                NSS {positivePercent - negativePercent > 0 ? `+${positivePercent - negativePercent}` : positivePercent - negativePercent}
+              </span>
+            )}
+          </div>
+
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-extrabold text-slate-900 tracking-tight">
               {totalEntries === 0 ? '0%' : `${positivePercent}%`}
             </span>
+            <span className="text-xs text-slate-500 font-medium">positive ratio</span>
           </div>
-          <p className="text-xs text-slate-600 font-semibold">
-            {totalEntries === 0 ? 'No feedback ingested yet' : `positive · ${negativePercent}% negative`}
+
+          {/* Meaningful Context */}
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            {totalEntries === 0 
+              ? 'Measures customer happiness ratio to identify churn vulnerability.' 
+              : `${positiveItems.length} happy advocates vs. ${negativeItems.length} at-risk detractors across ingested records.`
+            }
           </p>
           
           {/* Dual-tone Progress Bar (Deep Indigo for positive, Obsidian Black for negative) */}
-          <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden flex">
+          <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden flex">
             <div 
               className="bg-indigo-600 h-full transition-all duration-500" 
               style={{ width: `${totalEntries === 0 ? 0 : positivePercent}%` }} 
@@ -887,32 +1016,56 @@ export const MasterDashboardView: React.FC = () => {
               style={{ width: `${totalEntries === 0 ? 0 : negativePercent}%` }} 
             />
           </div>
-        </div>
 
-        {/* Metric 2: Top Topic Clusters */}
-        <div className={`${glassCard} p-6 space-y-3`}>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Top topic clusters
-          </p>
-          <div className="space-y-2 pt-1 text-xs">
-            {topTopicList.length === 0 ? (
-              <p className="text-xs text-slate-400 py-2">No topic clusters recorded yet. Ingest a dataset to begin.</p>
-            ) : (
-              topTopicList.map((cluster) => (
-                <div key={cluster.name} className="flex items-center justify-between font-semibold">
-                  <span className="text-slate-800">{cluster.name}</span>
-                  <span className="font-mono text-slate-600 font-bold">{cluster.count}</span>
-                </div>
-              ))
-            )}
+          <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
+            <span className="text-indigo-600 font-bold">{positivePercent}% Advocates</span>
+            <span className="text-slate-900 font-bold">{negativePercent}% Detractors</span>
           </div>
         </div>
 
-        {/* Metric 3: Recurring Complaints */}
-        <div className={`${glassCard} p-6 flex flex-col justify-between space-y-3`}>
+        {/* Metric 2: Top Topic Clusters */}
+        <div className={`${glassCard} p-6 space-y-3.5`}>
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Recurring complaints
+              Top Topic Clusters
+            </p>
+            <span className="text-[10px] font-mono text-slate-400">
+              {topTopicList.length} Categories
+            </span>
+          </div>
+
+          <div className="space-y-2 pt-0.5 text-xs">
+            {topTopicList.length === 0 ? (
+              <p className="text-xs text-slate-400 py-3">No topic clusters recorded yet. Ingest a dataset to categorize issues.</p>
+            ) : (
+              topTopicList.map((cluster) => {
+                const sharePct = totalEntries > 0 ? Math.round((cluster.count / totalEntries) * 100) : 0;
+                return (
+                  <div key={cluster.name} className="flex items-center justify-between font-semibold p-1.5 rounded-lg hover:bg-white/30 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                      <span className="text-slate-800">{cluster.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 font-mono">
+                      <span className="text-[10px] text-slate-400">{sharePct}%</span>
+                      <span className="font-bold text-slate-700 bg-white/40 px-1.5 py-0.5 rounded border border-white/60">{cluster.count}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <p className="text-[11px] text-slate-500 font-medium pt-1 border-t border-slate-100/60">
+            Semantic product groupings showing where user feedback concentrates.
+          </p>
+        </div>
+
+        {/* Metric 3: Recurring Complaints */}
+        <div className={`${glassCard} p-6 flex flex-col justify-between space-y-3.5`}>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Recurring Complaints
             </p>
             <button 
               onClick={() => {
@@ -923,26 +1076,43 @@ export const MasterDashboardView: React.FC = () => {
                 showToast("Synthesized negative issues analysis", "info");
                 alert(`AI Synthesis: ${negativeItems.length} negative entries detected. Top friction centers around ${topComplaintCategory ? `${topComplaintCategory[0]} (${topComplaintCategory[1]} mentions)` : 'no recorded issues'}.`);
               }}
-              className="text-xs font-bold text-slate-900 hover:text-indigo-600 cursor-pointer"
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 cursor-pointer"
             >
-              Summarize
+              Quick Summary
             </button>
           </div>
-          <p className="text-xs text-slate-700 font-medium leading-relaxed">
-            {totalEntries === 0 
-              ? 'No negative complaints recorded yet.' 
-              : `${negativeItems.length} negative mentions${topComplaintCategory ? `, led by ${topComplaintCategory[0]}.` : '.'}`
-            }
-          </p>
-          <div className="pt-2">
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                {negativeItems.length}
+              </span>
+              <span className="text-xs text-rose-700 font-bold">urgent tickets</span>
+            </div>
+            <p className="text-xs text-slate-600 font-medium leading-relaxed mt-1">
+              {totalEntries === 0 
+                ? 'No negative complaints recorded yet.' 
+                : topComplaintCategory 
+                ? `Primary bottleneck: ${topComplaintCategory[0]} (${topComplaintCategory[1]} friction reports).` 
+                : `${negativeItems.length} negative complaints requiring immediate review.`
+              }
+            </p>
+          </div>
+
+          <div className="pt-2 flex items-center justify-between">
             {totalEntries === 0 ? (
-              <span className="text-[11px] font-bold text-slate-500 bg-slate-100/70 border border-slate-200 px-2 py-0.5 rounded-md">
+              <span className="text-[11px] font-bold text-slate-500 bg-white/40 border border-white/60 px-2.5 py-0.5 rounded-md">
                 Awaiting Dataset Upload
               </span>
             ) : (
-              <span className="text-[11px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
-                Immediate Action Recommended
-              </span>
+              <>
+                <span className="text-[11px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-md">
+                  Active Churn Threat
+                </span>
+                <span className="text-[11px] font-mono text-slate-500 font-semibold">
+                  ~${(negativeItems.length * 14200).toLocaleString()} ARR Exposure
+                </span>
+              </>
             )}
           </div>
         </div>
@@ -955,14 +1125,37 @@ export const MasterDashboardView: React.FC = () => {
         
         {/* Sentiment Trend AreaChart */}
         <div className={`lg:col-span-8 ${glassCard} p-6 space-y-4`}>
-          <div className="flex items-center justify-between">
-            <h3 className="text-base sm:text-lg font-bold text-slate-900">
-              Sentiment trend
-            </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                  Sentiment Trend & Trajectory
+                </h3>
+                {totalEntries > 0 && (
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                    positivePercent >= 50 
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                  }`}>
+                    {positivePercent >= 50 ? '▲ Upward Advocacy' : '▼ High Friction Alert'}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Purpose: Tracks sentiment movement over time to verify whether engineering fixes and product updates are resolving user complaints.
+              </p>
+            </div>
+
             {totalEntries > 0 && (
-              <span className="text-[11px] font-mono text-slate-500 font-semibold">
-                Monthly trajectory
-              </span>
+              <div className="flex items-center gap-3 text-[11px] font-mono shrink-0">
+                <span className="flex items-center gap-1.5 text-indigo-600 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" /> Positive Trend
+                </span>
+                <span className="flex items-center gap-1.5 text-slate-900 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#090d16]" /> Complaints
+                </span>
+              </div>
             )}
           </div>
 
@@ -1035,13 +1228,32 @@ export const MasterDashboardView: React.FC = () => {
               </ResponsiveContainer>
             </div>
           )}
+
+          {totalEntries > 0 && (
+            <div className="pt-2 border-t border-slate-100/60 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+              <span>Insight: A widening gap between positive and negative curves signals successful remediation sprints.</span>
+              <span className="font-mono font-bold text-slate-700">{totalEntries} points modeled</span>
+            </div>
+          )}
         </div>
 
         {/* Sentiment Split Donut Chart */}
         <div className={`lg:col-span-4 ${glassCard} p-6 flex flex-col justify-between space-y-4`}>
-          <h3 className="text-base sm:text-lg font-bold text-slate-900">
-            Sentiment split
-          </h3>
+          <div>
+            <div className="flex items-center justify-between">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                Sentiment Split Ratio
+              </h3>
+              {totalEntries > 0 && (
+                <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                  NSS {positivePercent - negativePercent > 0 ? `+${positivePercent - negativePercent}` : positivePercent - negativePercent}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Purpose: Evaluates customer mood balance to quantify churn probability vs brand advocacy.
+            </p>
+          </div>
 
           {totalEntries === 0 ? (
             <div className="h-60 w-full rounded-2xl border-2 border-dashed border-slate-200/80 bg-white/10 flex flex-col items-center justify-center text-center p-4 space-y-2">
@@ -1053,15 +1265,15 @@ export const MasterDashboardView: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="h-44 w-full flex items-center justify-center">
+              <div className="h-44 w-full flex items-center justify-center relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={donutData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={75}
+                      innerRadius={48}
+                      outerRadius={74}
                       paddingAngle={3}
                       dataKey="value"
                       strokeWidth={0}
@@ -1080,29 +1292,51 @@ export const MasterDashboardView: React.FC = () => {
                     />
                   </PieChart>
                 </ResponsiveContainer>
+
+                {/* Center Badge */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-xl font-extrabold text-slate-900 font-mono">
+                    {positivePercent}%
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Advocates
+                  </span>
+                </div>
               </div>
 
-              {/* Donut Legend */}
+              {/* Donut Detailed Legend with ARR context */}
               <div className="space-y-2 pt-2 border-t border-slate-100 text-xs font-semibold">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-slate-700">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#6366f1]" /> Positive
-                  </span>
-                  <span className="font-mono text-slate-900 font-bold">{positiveItems.length}</span>
+                <div className="flex items-center justify-between p-1 rounded-lg hover:bg-white/40 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#6366f1]" />
+                    <span className="text-slate-700">Positive Advocates</span>
+                  </div>
+                  <div className="flex items-center gap-2 font-mono">
+                    <span className="text-[11px] text-slate-400">{positivePercent}%</span>
+                    <span className="font-bold text-slate-900">{positiveItems.length}</span>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-slate-700">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#94a3b8]" /> Neutral
-                  </span>
-                  <span className="font-mono text-slate-900 font-bold">{neutralItems.length}</span>
+                <div className="flex items-center justify-between p-1 rounded-lg hover:bg-white/40 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#94a3b8]" />
+                    <span className="text-slate-700">Neutral (Passive)</span>
+                  </div>
+                  <div className="flex items-center gap-2 font-mono">
+                    <span className="text-[11px] text-slate-400">{totalEntries > 0 ? 100 - positivePercent - negativePercent : 0}%</span>
+                    <span className="font-bold text-slate-900">{neutralItems.length}</span>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-slate-700">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#090d16]" /> Negative
-                  </span>
-                  <span className="font-mono text-slate-900 font-bold">{negativeItems.length}</span>
+                <div className="flex items-center justify-between p-1 rounded-lg hover:bg-white/40 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#090d16]" />
+                    <span className="text-slate-700">Negative Detractors</span>
+                  </div>
+                  <div className="flex items-center gap-2 font-mono">
+                    <span className="text-[11px] text-rose-600 font-bold">{negativePercent}%</span>
+                    <span className="font-bold text-slate-900">{negativeItems.length}</span>
+                  </div>
                 </div>
               </div>
             </>
@@ -1111,12 +1345,28 @@ export const MasterDashboardView: React.FC = () => {
       </div>
 
       {/* ========================================================
-          5. MOST FREQUENTLY REPORTED ISSUES (Horizontal Bars)
+          5. MOST FREQUENTLY REPORTED ISSUES (Root Cause Matrix)
           ======================================================== */}
-      <div className={`${glassCard} p-6 space-y-4`}>
-        <h3 className="text-base sm:text-lg font-bold text-slate-900">
-          Most frequently reported issues
-        </h3>
+      <div className={`${glassCard} p-6 sm:p-7 space-y-4`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100/60">
+          <div>
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                Most Frequently Reported Issues (Root Cause Matrix)
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Purpose: Ranks recurring customer pain points by volume so engineering and product teams prioritize sprints on the highest-impact blockers.
+            </p>
+          </div>
+
+          {frequentIssues.length > 0 && (
+            <span className="text-[11px] font-mono text-slate-500 font-semibold self-start sm:self-center">
+              Sorted by Incident Frequency
+            </span>
+          )}
+        </div>
 
         {totalEntries === 0 || frequentIssues.length === 0 ? (
           <div className="py-10 text-center border border-dashed border-slate-200/70 rounded-xl bg-white/10 space-y-2">
@@ -1125,38 +1375,64 @@ export const MasterDashboardView: React.FC = () => {
             <p className="text-[11px] text-slate-400">Upload your customer feedback dataset to rank frequent issues.</p>
           </div>
         ) : (
-          <>
-            <div className="space-y-3.5 pt-2">
-              {frequentIssues.map((issue) => {
-                const widthPct = Math.max(Math.round((issue.count / maxFrequentCount) * 100), issue.count > 0 ? 8 : 0);
-                return (
-                  <div key={issue.topic} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-slate-800">{issue.topic}</span>
-                      <span className="font-mono text-slate-600">{issue.count}</span>
+          <div className="space-y-4 pt-1">
+            {frequentIssues.map((issue, idx) => {
+              const widthPct = Math.max(Math.round((issue.count / maxFrequentCount) * 100), issue.count > 0 ? 8 : 0);
+              const estArr = issue.count * 14200;
+              const severity = idx === 0 ? 'Critical' : idx === 1 ? 'High' : 'Moderate';
+              const sla = idx === 0 ? '24h Hotfix' : idx === 1 ? '48h Sprint' : '3-Day Sprint';
+
+              return (
+                <div key={issue.topic} className="p-3.5 rounded-xl bg-white/40 border border-white/60 space-y-2.5 hover:bg-white/60 transition-all">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 h-5 rounded-md bg-indigo-600 text-white font-mono font-bold text-[11px] flex items-center justify-center">
+                        #{idx + 1}
+                      </span>
+                      <span className="text-xs font-bold text-slate-900">
+                        {issue.topic}
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                        severity === 'Critical' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                        severity === 'High' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                      }`}>
+                        {severity}
+                      </span>
                     </div>
-                    <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden flex">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          issue.isPrimary ? 'bg-indigo-600' : 'bg-[#090d16]'
-                        }`}
-                        style={{ width: `${widthPct}%` }}
-                      />
+
+                    <div className="flex items-center gap-2 font-mono text-[11px]">
+                      <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+                        SLA: {sla}
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-white/70 text-slate-700 border border-slate-200 font-semibold">
+                        ~${estArr.toLocaleString()} ARR
+                      </span>
+                      <button
+                        onClick={() => {
+                          setTopicFilter(issue.topic);
+                          showToast(`Filtered inbox by ${issue.topic}`, 'info');
+                        }}
+                        className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer ml-1"
+                      >
+                        Inspect ({issue.count})
+                      </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
 
-            {/* X-axis tick markers */}
-            <div className="flex justify-between text-[11px] font-mono text-slate-400 pt-2 border-t border-slate-100">
-              <span>0</span>
-              <span>1</span>
-              <span>2</span>
-              <span>3</span>
-              <span>4</span>
-            </div>
-          </>
+                  {/* Horizontal Progress Bar */}
+                  <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden flex">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        issue.isPrimary ? 'bg-gradient-to-r from-indigo-600 to-purple-600' : 'bg-[#090d16]'
+                      }`}
+                      style={{ width: `${widthPct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
@@ -1447,8 +1723,8 @@ export const MasterDashboardView: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={handleGenerateRecommendations}
-              disabled={isGeneratingRecs || priorityIssues.length === 0}
+              onClick={() => handleGenerateRecommendations()}
+              disabled={isGeneratingRecs || (feedbacks.length === 0 && priorityIssues.length === 0)}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-bold cursor-pointer transition-all shadow-sm flex items-center gap-2 disabled:opacity-50"
             >
               {isGeneratingRecs ? (
@@ -1468,33 +1744,46 @@ export const MasterDashboardView: React.FC = () => {
 
         {/* Dedicated Solution Generation Loader */}
         {isGeneratingRecs ? (
-          <div className="py-12 px-6 rounded-2xl bg-white/80 border border-indigo-200/80 shadow-sm text-center space-y-4 animate-in fade-in duration-200">
-            <div className="relative w-14 h-14 mx-auto flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-indigo-500/20 animate-ping" />
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                <Cpu className="w-6 h-6 animate-spin" style={{ animationDuration: '2.5s' }} />
+          <div className="py-12 px-6 rounded-2xl bg-white/20 backdrop-blur-3xl border border-white/50 shadow-[0_15px_40px_rgba(99,102,241,0.08),inset_0_1px_2px_rgba(255,255,255,0.85)] text-center space-y-5 animate-in fade-in duration-300 relative overflow-hidden">
+            {/* Ambient background light glows */}
+            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-purple-500/15 blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-indigo-500/15 blur-2xl pointer-events-none" />
+
+            {/* Unique Prismatic Waveform & Orbiting Particle Loader */}
+            <div className="relative z-10 w-16 h-16 mx-auto flex items-center justify-center">
+              {/* Outer glowing orbital ring with subtle pulse */}
+              <div className="absolute inset-0 rounded-full border border-indigo-400/40 animate-[spin_6s_linear_infinite]" />
+              {/* Counter-rotating dashed accent orbit */}
+              <div className="absolute inset-1 rounded-full border border-dashed border-purple-400/50 animate-[spin_8s_linear_infinite_reverse]" />
+              {/* Orbiting luminous particle comet */}
+              <div className="absolute inset-0 rounded-full animate-[spin_3s_linear_infinite]">
+                <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 shadow-[0_0_12px_rgba(99,102,241,1)] -mt-1 mx-auto" />
+              </div>
+              {/* Center prismatic spark nexus */}
+              <div className="w-8 h-8 rounded-xl bg-white/50 backdrop-blur-md border border-white/80 text-indigo-700 flex items-center justify-center shadow-md shadow-indigo-500/20 animate-pulse">
+                <Sparkles className="w-4 h-4 text-indigo-600" />
               </div>
             </div>
 
-            <div className="space-y-1 max-w-md mx-auto">
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-[11px] font-bold text-indigo-700">
-                <Sparkles className="w-3.5 h-3.5" />
+            <div className="relative z-10 space-y-1.5 max-w-md mx-auto">
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/40 backdrop-blur-md border border-white/60 text-[11px] font-bold text-indigo-800 shadow-xs">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
                 <span>AI Engineering Architecture Solver</span>
               </div>
               <h4 className="text-base font-bold text-slate-900 tracking-tight">
-                Synthesizing In-Depth Strategic Solutions...
+                Synthesizing Dynamic Strategic Solutions...
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Diagnosing technical failure modes, computing ARR financial exposure, and drafting concrete engineering sprint SOPs.
+                Analyzing uploaded feedback topics, extracting technical failure modes, computing ARR financial exposure, and drafting concrete engineering sprint SOPs.
               </p>
             </div>
 
-            <div className="max-w-xs mx-auto bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 animate-[pulse_1s_infinite] w-full" />
+            <div className="relative z-10 max-w-xs mx-auto bg-white/40 border border-white/60 h-2 rounded-full overflow-hidden p-0.5 backdrop-blur-xs">
+              <div className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 rounded-full animate-[pulse_1.5s_infinite] w-full" />
             </div>
 
-            <p className="text-[11px] text-slate-400 font-mono">
-              Analyzing root causes • Targeting 100% actionable sprint tasks
+            <p className="relative z-10 text-[11px] text-slate-500 font-mono">
+              Live reasoning on ingested issues • Targeting 100% actionable sprint SOPs
             </p>
           </div>
         ) : solutionsList.length === 0 ? (

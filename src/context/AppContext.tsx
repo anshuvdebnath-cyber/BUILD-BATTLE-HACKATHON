@@ -44,7 +44,7 @@ interface AppContextType {
   setActivePlaybook: (pb: ActionablePlaybook | null) => void;
   
   // Actions
-  handleCSVUpload: (file: File) => Promise<void>;
+  handleCSVUpload: (file: File) => Promise<FeedbackItem[] | undefined>;
   addManualFeedback: (item: Partial<FeedbackItem>) => void;
   runAdaptionPipeline: () => Promise<void>;
   updateIssueStatus: (id: string, status: 'backlog' | 'in_progress' | 'resolved') => void;
@@ -168,6 +168,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         duplicateRowsEliminated: report.duplicateCount,
       });
       triggerConfetti();
+      return items;
     } catch (err) {
       console.error('CSV Parsing failed', err);
       alert('Failed to parse CSV file. Please ensure it has valid headers.');

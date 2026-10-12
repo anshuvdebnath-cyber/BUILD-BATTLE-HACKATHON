@@ -40,32 +40,47 @@ export const feedbackController = {
 
       const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
       
-      const hasText = headers.includes('feedback_text') || headers.includes('review') || headers.includes('text');
-      const hasCustomerId = headers.includes('customer_id') || headers.includes('customer_name') || headers.includes('id');
-      const hasDate = headers.includes('date') || headers.includes('timestamp');
-      const hasSource = headers.includes('source');
+      const isIdCol = (h) => {
+        const clean = h.trim().toLowerCase();
+        return clean === 'id' || clean.endsWith('_id') || clean.endsWith('id') || clean.endsWith('_num') || clean.endsWith('_no');
+      };
 
-      if (!hasText) {
+      // Determine best text column index
+      let textIdx = headers.findIndex(h => !isIdCol(h) && ['feedback_text', 'text', 'comment', 'review', 'feedback', 'message', 'body', 'description', 'content', 'issue'].includes(h));
+      if (textIdx === -1) {
+        textIdx = headers.findIndex(h => !isIdCol(h) && /(feedback|review|comment|text|message|body|description|content|complaint)/i.test(h));
+      }
+      if (textIdx === -1) {
+        textIdx = headers.findIndex(h => !isIdCol(h));
+      }
+
+      if (textIdx === -1) {
         return res.status(400).json({
           success: false,
-          error: 'Schema Validation Error: Required column "feedback_text" (or "review") is missing in CSV.'
+          error: 'Schema Validation Error: Required text/feedback column is missing in CSV.'
         });
       }
+
+      const custIdx = headers.findIndex(h => /customer_id|customer|user_id|user|author|client|account|name/i.test(h));
+      const dateIdx = headers.findIndex(h => /date|timestamp|time|created/i.test(h));
+      const sourceIdx = headers.findIndex(h => /source|channel|medium|platform/i.test(h));
+      const sentIdx = headers.findIndex(h => /^(sentiment|sentiment_type|polarity)$/i.test(h));
 
       // Parse and store rows
       const parsedRows = [];
       for (let i = 1; i < lines.length; i++) {
         const cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
-        const textVal = cols[headers.indexOf('feedback_text')] || cols[headers.indexOf('review')] || cols[0] || '';
+        const textVal = cols[textIdx] || '';
         if (textVal.trim()) {
+          const custVal = (custIdx !== -1 && cols[custIdx]) ? cols[custIdx] : `CUST-${1000 + i}`;
           parsedRows.push({
-            customer_id: cols[headers.indexOf('customer_id')] || `CUST-${1000 + i}`,
-            customerName: `Customer #${1000 + i}`,
+            customer_id: custVal,
+            customerName: custVal.includes('CUST') ? `Account #${custVal.replace(/\D/g, '') || i}` : custVal,
             feedback_text: textVal,
             rawText: textVal,
-            date: cols[headers.indexOf('date')] || new Date().toISOString().split('T')[0],
-            source: cols[headers.indexOf('source')] || 'CSV Upload',
-            sentiment: cols[headers.indexOf('sentiment')] || (i % 2 === 0 ? 'positive' : 'negative')
+            date: (dateIdx !== -1 && cols[dateIdx]) ? cols[dateIdx] : new Date().toISOString().split('T')[0],
+            source: (sourceIdx !== -1 && cols[sourceIdx]) ? cols[sourceIdx] : 'CSV Upload',
+            sentiment: (sentIdx !== -1 && cols[sentIdx]) ? cols[sentIdx] : (/crash|fail|slow|bug|broken|error|bad|issue/i.test(textVal) ? 'negative' : /love|great|awesome|fast|good|amazing/i.test(textVal) ? 'positive' : 'neutral')
           });
         }
       }
@@ -85,10 +100,10 @@ export const feedbackController = {
           schemaValid: true,
           columnsDetected: headers,
           hasRequiredColumns: {
-            customer_id: hasCustomerId,
-            feedback_text: hasText,
-            date: hasDate,
-            source: hasSource
+            customer_id: custIdx !== -1,
+            feedback_text: textIdx !== -1,
+            date: dateIdx !== -1,
+            source: sourceIdx !== -1
           },
           totalRowsParsed: parsedRows.length,
           storedInDatabase: inserted.length
