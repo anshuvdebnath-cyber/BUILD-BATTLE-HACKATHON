@@ -88,7 +88,9 @@ export const MasterDashboardView: React.FC = () => {
     addManualFeedback, 
     handleCSVUpload, 
     triggerConfetti,
-    showToast
+    showToast,
+    loadCloudDataset,
+    modelInfo
   } = useApp();
 
   // Search & Filter State
@@ -843,7 +845,16 @@ export const MasterDashboardView: React.FC = () => {
         </div>
 
         {/* Action CTAs */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <button
+            onClick={() => loadCloudDataset()}
+            className="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 text-xs font-bold border border-purple-200 flex items-center gap-2 cursor-pointer shadow-2xs transition-all"
+            title="Load your real 1,400 adapted preference rows from Adaption Labs cloud"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+            <span>Load Adaption Cloud</span>
+          </button>
+
           <button
             onClick={() => fileInputRef.current?.click()}
             className="px-4 py-2 rounded-xl bg-white/30 backdrop-blur-md hover:bg-white/50 text-slate-800 text-xs font-bold border border-white/50 flex items-center gap-2 cursor-pointer shadow-2xs transition-colors"

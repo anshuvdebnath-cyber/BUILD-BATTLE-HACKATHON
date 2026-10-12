@@ -1,0 +1,101 @@
+"""
+Official Adaption Labs Dataset Adaptation & AutoScientist Pipeline (Python SDK)
+Adapted from Adaption Labs official documentation.
+
+Prerequisites:
+  pip install adaption python-dotenv
+
+Usage:
+  python scripts/adaption_pipeline.py
+"""
+
+import os
+import sys
+import time
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv("ADAPTION_API_KEY")
+if not API_KEY:
+    print("❌ ERROR: ADAPTION_API_KEY environment variable not found in .env file.")
+    sys.exit(1)
+
+try:
+    from adaption import Adaption
+except ImportError:
+    print("⚠️  'adaption' package is not installed.")
+    print("Install it with: pip install adaption")
+    sys.exit(1)
+
+client = Adaption(api_key=API_KEY)
+
+CSV_FILE = "test_feedback_dataset.csv"
+if not os.path.exists(CSV_FILE):
+    print(f"⚠️  {CSV_FILE} not found, falling back to cx_feedback_preferences.csv")
+    CSV_FILE = "cx_feedback_preferences.csv"
+
+print(f"🚀 [Step 1] Uploading file: {CSV_FILE}...")
+dataset = client.datasets.upload_file(
+    CSV_FILE,
+    name=f"cx_feedback_{int(time.time())}",
+)
+print(f"✅ Dataset Created! ID: {dataset.dataset_id}")
+
+print("⏳ [Step 2] Waiting for ingestion to finish...")
+while True:
+    status = client.datasets.get_status(dataset.dataset_id)
+    if status.status == "failed":
+        err = status.error_data
+        msg = (err and err.message) or "unknown error"
+        raise RuntimeError(f"Ingestion failed: {msg}")
+    if status.row_count is not None:
+        print(f"✅ Ingestion complete: {status.row_count} rows indexed.")
+        break
+    time.sleep(5)
+
+print("🎯 [Step 3] Adapting dataset with preference pairs (DPO)...")
+job = client.datasets.adapt(
+    dataset.dataset_id,
+    training_type="preference_pairs",
+)
+est_min = getattr(job, "estimated_minutes", 5)
+print(f"Launched — estimated time: {est_min:.0f} minutes")
+
+print("⏳ [Step 4] Polling until adaptation is complete...")
+while True:
+    status = client.datasets.get_status(dataset.dataset_id)
+    if status.status == "succeeded":
+        print("✅ Dataset adaptation succeeded!")
+        break
+    if status.status == "failed":
+        err = status.error_data
+        msg = (err and err.message) or "unknown error"
+        raise RuntimeError(f"Adaptation failed: {msg}")
+    print(f"   Current status: {status.status}... checking in 10s")
+    time.sleep(10)
+
+print("📊 [Step 5] Reviewing evaluation results...")
+ds = client.datasets.get(dataset.dataset_id)
+if hasattr(ds, "evaluation_summary") and ds.evaluation_summary:
+    print(f"   Quality Grade: {ds.evaluation_summary.grade_before} → {ds.evaluation_summary.grade_after}")
+    print(f"   Quality Improvement: {ds.evaluation_summary.improvement_percent:.0f}%")
+
+print("💾 [Step 6] Downloading adapted dataset...")
+client.datasets.download(dataset.dataset_id)
+print("✅ Download complete.")
+
+print("🤖 [Step 7] Training Mistral-7B model with AutoScientist...")
+run = client.autoscientist.create(
+    dataset_id=dataset.dataset_id,
+    target_win_rate=0.9,
+)
+print(f"   AutoScientist Run launched: {run.id}")
+
+run = client.autoscientist.wait_for_completion(run.id)
+print(f"✅ AutoScientist {run.status} — Best Win Rate: {run.best_win_rate}")
+
+print("📦 [Step 8] Downloading the best adapter weights...")
+if run.download_available:
+    client.autoscientist.download(run.id).write_to_file("adapter.tar.gz")
+    print("🎉 Adapter downloaded successfully to adapter.tar.gz!")

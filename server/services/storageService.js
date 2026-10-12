@@ -64,5 +64,10 @@ export const storageService = {
 
   count: () => {
     return feedbackEntries.length;
+  },
+
+  clear: () => {
+    feedbackEntries = [];
+    return true;
   }
 };
