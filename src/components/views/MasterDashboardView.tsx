@@ -138,7 +138,7 @@ export const MasterDashboardView: React.FC = () => {
 
   // Dynamic Sentiment Split Donut Data
   const donutData = useMemo(() => [
-    { name: 'Positive', value: positiveItems.length, color: '#0284c7' }, // vibrant cyan/blue
+    { name: 'Positive', value: positiveItems.length, color: '#6366f1' }, // Deep royal indigo matching theme
     { name: 'Neutral', value: neutralItems.length, color: '#94a3b8' },   // gray
     { name: 'Negative', value: negativeItems.length, color: '#090d16' }, // deep black
   ], [positiveItems.length, neutralItems.length, negativeItems.length]);
@@ -453,7 +453,7 @@ export const MasterDashboardView: React.FC = () => {
             onClick={handleExportData}
             className="px-4 py-2 rounded-xl bg-[#090d16] hover:bg-black text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
           >
-            <Download className="w-3.5 h-3.5 text-emerald-400" />
+            <Download className="w-3.5 h-3.5 text-indigo-300" />
             <span>Export</span>
           </button>
         </div>
@@ -466,10 +466,10 @@ export const MasterDashboardView: React.FC = () => {
         
         {/* Left Hero Card */}
         <div className={`lg:col-span-5 ${glassCard} p-6 flex flex-col justify-between relative overflow-hidden group`}>
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/30 via-purple-50/20 to-white/10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/20 via-purple-50/20 to-white/10 pointer-events-none" />
           
           <div className="relative z-10 space-y-4">
-            <div className="w-full h-32 rounded-xl bg-gradient-to-r from-blue-100/40 via-indigo-50/50 to-cyan-100/40 border border-white/50 backdrop-blur-md p-4 flex flex-col justify-between">
+            <div className="w-full h-32 rounded-xl bg-gradient-to-r from-blue-100/40 via-indigo-50/50 to-purple-100/40 border border-white/50 backdrop-blur-md p-4 flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold">
                 <span className="flex items-center gap-1.5 text-indigo-700 font-bold">
                   <Sparkles className="w-3.5 h-3.5" /> Real-time Decision Matrix
@@ -478,8 +478,8 @@ export const MasterDashboardView: React.FC = () => {
               </div>
               <div className="flex items-end justify-between">
                 <div className="flex -space-x-1.5">
-                  <div className="w-6 h-6 rounded-full bg-cyan-600 text-white text-[10px] font-bold flex items-center justify-center">R</div>
-                  <div className="w-6 h-6 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center">S</div>
+                  <div className="w-6 h-6 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center">R</div>
+                  <div className="w-6 h-6 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center">S</div>
                   <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-bold flex items-center justify-center">E</div>
                 </div>
                 <span className="text-[11px] font-mono font-bold text-slate-700">94.8% ACC</span>
@@ -507,8 +507,8 @@ export const MasterDashboardView: React.FC = () => {
               </h3>
             </div>
             {isAnalyzing && (
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-cyan-700 bg-cyan-50/80 px-2 py-0.5 rounded-full border border-cyan-200">
-                <div className="w-2 h-2 rounded-full bg-cyan-600 animate-ping" />
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-700 bg-indigo-50/80 px-2 py-0.5 rounded-full border border-indigo-200">
+                <div className="w-2 h-2 rounded-full bg-indigo-600 animate-ping" />
                 <span>Running Adaption AI...</span>
               </div>
             )}
@@ -544,7 +544,7 @@ export const MasterDashboardView: React.FC = () => {
             <button
               onClick={handleAnalyzeAndAdd}
               disabled={isAnalyzing || !newFeedbackText.trim()}
-              className="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
+              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
             >
               {isAnalyzing ? (
                 <>
@@ -581,10 +581,10 @@ export const MasterDashboardView: React.FC = () => {
             positive · {negativePercent}% negative
           </p>
           
-          {/* Dual-tone Progress Bar (Cyan for positive, Black for negative) */}
+          {/* Dual-tone Progress Bar (Deep Indigo for positive, Obsidian Black for negative) */}
           <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden flex">
             <div 
-              className="bg-cyan-600 h-full transition-all duration-500" 
+              className="bg-indigo-600 h-full transition-all duration-500" 
               style={{ width: `${positivePercent}%` }} 
             />
             <div 
@@ -624,7 +624,7 @@ export const MasterDashboardView: React.FC = () => {
                 triggerConfetti();
                 alert(`AI Synthesis: ${negativeItems.length} negative entries detected. Top friction centers around ${topComplaintCategory ? `${topComplaintCategory[0]} (${topComplaintCategory[1]} mentions)` : 'no recorded issues'}.`);
               }}
-              className="text-xs font-bold text-slate-900 hover:text-cyan-700 cursor-pointer"
+              className="text-xs font-bold text-slate-900 hover:text-indigo-600 cursor-pointer"
             >
               Summarize
             </button>
@@ -654,9 +654,9 @@ export const MasterDashboardView: React.FC = () => {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="trendCyan" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0284c7" stopOpacity={0.35}/>
-                    <stop offset="95%" stopColor="#0284c7" stopOpacity={0.0}/>
+                  <linearGradient id="trendIndigo" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.35}/>
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0}/>
                   </linearGradient>
                   <linearGradient id="trendBlack" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#090d16" stopOpacity={0.25}/>
@@ -695,10 +695,10 @@ export const MasterDashboardView: React.FC = () => {
                 <Area 
                   type="monotone" 
                   dataKey="positive" 
-                  stroke="#0284c7" 
+                  stroke="#6366f1" 
                   strokeWidth={2.4} 
                   fillOpacity={1} 
-                  fill="url(#trendCyan)" 
+                  fill="url(#trendIndigo)" 
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -744,7 +744,7 @@ export const MasterDashboardView: React.FC = () => {
           <div className="space-y-2 pt-2 border-t border-slate-100 text-xs font-semibold">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2 text-slate-700">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#0284c7]" /> Positive
+                <span className="w-2.5 h-2.5 rounded-full bg-[#6366f1]" /> Positive
               </span>
               <span className="font-mono text-slate-900 font-bold">{positiveItems.length}</span>
             </div>
@@ -786,7 +786,7 @@ export const MasterDashboardView: React.FC = () => {
                 <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden flex">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
-                      issue.isPrimary ? 'bg-cyan-600' : 'bg-[#090d16]'
+                      issue.isPrimary ? 'bg-indigo-600' : 'bg-[#090d16]'
                     }`}
                     style={{ width: `${widthPct}%` }}
                   />
@@ -849,7 +849,7 @@ export const MasterDashboardView: React.FC = () => {
                       className="w-full px-3.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50/80 flex items-center justify-between cursor-pointer"
                     >
                       <span>{opt}</span>
-                      {sentimentFilter === opt && <Check className="w-3.5 h-3.5 text-cyan-600" />}
+                      {sentimentFilter === opt && <Check className="w-3.5 h-3.5 text-indigo-600" />}
                     </button>
                   ))}
                 </div>
@@ -882,7 +882,7 @@ export const MasterDashboardView: React.FC = () => {
                       className="w-full px-3.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50/80 flex items-center justify-between cursor-pointer"
                     >
                       <span>{opt}</span>
-                      {sourceFilter === opt && <Check className="w-3.5 h-3.5 text-cyan-600" />}
+                      {sourceFilter === opt && <Check className="w-3.5 h-3.5 text-indigo-600" />}
                     </button>
                   ))}
                 </div>
@@ -915,7 +915,7 @@ export const MasterDashboardView: React.FC = () => {
                       className="w-full px-3.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50/80 flex items-center justify-between cursor-pointer"
                     >
                       <span>{opt}</span>
-                      {topicFilter === opt && <Check className="w-3.5 h-3.5 text-cyan-600" />}
+                      {topicFilter === opt && <Check className="w-3.5 h-3.5 text-indigo-600" />}
                     </button>
                   ))}
                 </div>
@@ -954,7 +954,7 @@ export const MasterDashboardView: React.FC = () => {
                     {/* Sentiment Badge */}
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${
                       isPos 
-                        ? 'bg-cyan-50/80 text-cyan-700 border-cyan-200' 
+                        ? 'bg-indigo-50/80 text-indigo-700 border-indigo-200' 
                         : isNeg 
                         ? 'bg-slate-100/80 text-slate-800 border-slate-200' 
                         : 'bg-slate-50/80 text-slate-600 border-slate-200'
@@ -1019,7 +1019,7 @@ export const MasterDashboardView: React.FC = () => {
                         onClick={() => handleToggleTrack(issue.topic)}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer border ${
                           isSaved 
-                            ? 'bg-emerald-50/80 text-emerald-700 border-emerald-300' 
+                            ? 'bg-indigo-50/80 text-indigo-700 border-indigo-300' 
                             : 'bg-white/30 backdrop-blur-md hover:bg-white/50 text-slate-800 border-white/50'
                         }`}
                       >
@@ -1137,7 +1137,7 @@ export const MasterDashboardView: React.FC = () => {
                   triggerConfetti();
                 }, 400);
               }}
-              className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
             >
               <Wand2 className="w-3.5 h-3.5" />
               <span>{isGeneratingReport ? 'Generating...' : 'Generate report'}</span>
@@ -1174,7 +1174,7 @@ export const MasterDashboardView: React.FC = () => {
           <div className="p-4 rounded-xl bg-white/20 backdrop-blur-xl border border-white/40 space-y-1 hover:bg-white/35 transition-all">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">AI Decision Engine</span>
             <p className="text-sm font-bold text-slate-900">Adaption v1.4 Reasoning</p>
-            <p className="text-xs text-emerald-600 font-bold">Audited & Production Ready</p>
+            <p className="text-xs text-indigo-600 font-bold">Audited & Production Ready</p>
           </div>
         </div>
       </div>

@@ -235,8 +235,8 @@ export function DataCleaning() {
                 Live Customer Feedback Stream & Instant Prediction
               </h2>
             </div>
-            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-[11px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
               <span>Model Online</span>
             </span>
           </div>
@@ -482,33 +482,33 @@ export function DataCleaning() {
 
         {/* Training Output Card */}
         {trainingOutput && (
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-50/95 to-teal-50/80 border border-emerald-300 flex flex-col gap-4 animate-in fade-in">
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-50/95 to-purple-50/80 border border-indigo-300 flex flex-col gap-4 animate-in fade-in">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-emerald-950 font-bold text-sm">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
+              <div className="flex items-center gap-2 text-indigo-950 font-bold text-sm">
+                <CheckCircle className="w-5 h-5 text-indigo-600" />
                 <span>AutoScientist Model Trained & Deployed Live</span>
               </div>
-              <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-mono font-bold text-indigo-800 bg-indigo-100 px-2.5 py-0.5 rounded-full">
                 {trainingOutput.trainingId}
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
-              <div className="p-3 bg-white/90 rounded-xl border border-emerald-200">
+              <div className="p-3 bg-white/90 rounded-xl border border-indigo-200">
                 <span className="text-slate-500 block text-[10.5px]">Model Base:</span>
                 <span className="text-sm font-extrabold text-slate-900">{trainingOutput.baseModel}</span>
               </div>
-              <div className="p-3 bg-white/90 rounded-xl border border-emerald-200">
+              <div className="p-3 bg-white/90 rounded-xl border border-indigo-200">
                 <span className="text-slate-500 block text-[10.5px]">Benchmark Win-Rate:</span>
-                <span className="text-sm font-extrabold text-emerald-700">{trainingOutput.winRate}</span>
+                <span className="text-sm font-extrabold text-indigo-700">{trainingOutput.winRate}</span>
               </div>
-              <div className="p-3 bg-white/90 rounded-xl border border-emerald-200">
+              <div className="p-3 bg-white/90 rounded-xl border border-indigo-200">
                 <span className="text-slate-500 block text-[10.5px]">Quality Score:</span>
                 <span className="text-sm font-extrabold text-slate-900">{trainingOutput.qualityScore}</span>
               </div>
-              <div className="p-3 bg-white/90 rounded-xl border border-emerald-200">
+              <div className="p-3 bg-white/90 rounded-xl border border-indigo-200">
                 <span className="text-slate-500 block text-[10.5px]">Deployment Status:</span>
-                <span className="text-sm font-extrabold text-emerald-800">{trainingOutput.status}</span>
+                <span className="text-sm font-extrabold text-indigo-800">{trainingOutput.status}</span>
               </div>
             </div>
 

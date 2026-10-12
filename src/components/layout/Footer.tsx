@@ -40,7 +40,7 @@ export const Footer: React.FC = () => {
         {/* Adaption-Style Center Newsletter Pill */}
         <div className="max-w-md mx-auto mb-12">
           {subscribed ? (
-            <div className="rounded-[120px] py-3 px-6 bg-emerald-50 border border-emerald-300 text-emerald-800 text-center text-xs font-semibold shadow-xs">
+            <div className="rounded-[120px] py-3 px-6 bg-indigo-50/90 border border-indigo-300 text-indigo-800 text-center text-xs font-semibold shadow-xs">
               ✓ Subscribed to the Adaptive Intelligence Network!
             </div>
           ) : (
@@ -132,7 +132,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
             <span>All Systems Operational</span>
             <span className="text-slate-300">•</span>
             <span className="text-slate-700">Adaption Adaptive Engine v1.4 Connected</span>
