@@ -363,8 +363,8 @@ export const MasterDashboardView: React.FC = () => {
     }, 500);
   };
 
-  // Reusable glassmorphic container style
-  const glassCard = "rounded-2xl bg-white/75 backdrop-blur-2xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all";
+  // Reusable liquid glassmorphic container style (elevated transparency)
+  const glassCard = "rounded-2xl bg-white/20 backdrop-blur-3xl border border-white/45 shadow-[0_10px_35px_rgba(0,0,0,0.02),inset_0_1px_2px_rgba(255,255,255,0.85)] hover:bg-white/30 transition-all duration-300";
 
   return (
     <div className="w-full max-w-[1280px] mx-auto space-y-7 pb-20 select-text">
@@ -435,7 +435,7 @@ export const MasterDashboardView: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search all feedback..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50/80 border border-slate-200/90 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-slate-800 transition-colors"
+            className="w-full pl-9 pr-4 py-2 rounded-xl bg-white/25 backdrop-blur-md border border-white/45 text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white/45 focus:border-slate-800 transition-colors"
           />
         </div>
 
@@ -443,7 +443,7 @@ export const MasterDashboardView: React.FC = () => {
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-slate-200/90 flex items-center gap-2 cursor-pointer shadow-2xs transition-colors"
+            className="px-4 py-2 rounded-xl bg-white/30 backdrop-blur-md hover:bg-white/50 text-slate-800 text-xs font-bold border border-white/50 flex items-center gap-2 cursor-pointer shadow-2xs transition-colors"
           >
             <Upload className="w-3.5 h-3.5 text-indigo-600" />
             <span>Import CSV</span>
@@ -469,7 +469,7 @@ export const MasterDashboardView: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/30 via-purple-50/20 to-white/10 pointer-events-none" />
           
           <div className="relative z-10 space-y-4">
-            <div className="w-full h-32 rounded-xl bg-gradient-to-r from-blue-100/70 via-indigo-50/80 to-cyan-100/60 border border-blue-100/80 p-4 flex flex-col justify-between">
+            <div className="w-full h-32 rounded-xl bg-gradient-to-r from-blue-100/40 via-indigo-50/50 to-cyan-100/40 border border-white/50 backdrop-blur-md p-4 flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 text-[11px] font-semibold">
                 <span className="flex items-center gap-1.5 text-indigo-700 font-bold">
                   <Sparkles className="w-3.5 h-3.5" /> Real-time Decision Matrix
@@ -507,7 +507,7 @@ export const MasterDashboardView: React.FC = () => {
               </h3>
             </div>
             {isAnalyzing && (
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-200">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-cyan-700 bg-cyan-50/80 px-2 py-0.5 rounded-full border border-cyan-200">
                 <div className="w-2 h-2 rounded-full bg-cyan-600 animate-ping" />
                 <span>Running Adaption AI...</span>
               </div>
@@ -519,7 +519,7 @@ export const MasterDashboardView: React.FC = () => {
             onChange={(e) => setNewFeedbackText(e.target.value)}
             placeholder="Paste a customer comment..."
             rows={3}
-            className="w-full p-3.5 rounded-xl bg-slate-50/80 border border-slate-200 text-xs text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:bg-white focus:border-slate-800 resize-none transition-all"
+            className="w-full p-3.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/40 text-xs text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:bg-white/40 focus:border-slate-800 resize-none transition-all"
           />
 
           <div className="flex items-center justify-between pt-1">
@@ -527,7 +527,7 @@ export const MasterDashboardView: React.FC = () => {
               <select
                 value={newFeedbackCategory}
                 onChange={(e) => setNewFeedbackCategory(e.target.value as IssueCategory)}
-                className="appearance-none bg-slate-50/90 border border-slate-200/90 text-slate-800 text-xs font-semibold py-2 pl-3.5 pr-8 rounded-xl focus:outline-none cursor-pointer"
+                className="appearance-none bg-white/30 backdrop-blur-md border border-white/45 text-slate-800 text-xs font-semibold py-2 pl-3.5 pr-8 rounded-xl focus:outline-none cursor-pointer hover:bg-white/40 transition-colors"
               >
                 <option value="Support">Support</option>
                 <option value="Reliability">Reliability</option>
@@ -831,14 +831,14 @@ export const MasterDashboardView: React.FC = () => {
                   setSourceDropdownOpen(false);
                   setTopicDropdownOpen(false);
                 }}
-                className="px-3.5 py-1.5 rounded-xl bg-white/90 border border-slate-200/90 hover:border-slate-400 text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer shadow-2xs"
+                className="px-3.5 py-1.5 rounded-xl bg-white/25 backdrop-blur-md border border-white/45 hover:bg-white/45 text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer shadow-2xs transition-colors"
               >
                 <span>{sentimentFilter}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
               {sentimentDropdownOpen && (
-                <div className="absolute right-0 mt-1.5 w-44 rounded-xl bg-white/95 backdrop-blur-xl border border-slate-200 shadow-xl py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 mt-1.5 w-44 rounded-xl bg-white/85 backdrop-blur-2xl border border-white/70 shadow-xl py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
                   {['All sentiment', 'Positive', 'Negative', 'Neutral'].map((opt) => (
                     <button
                       key={opt}
@@ -846,7 +846,7 @@ export const MasterDashboardView: React.FC = () => {
                         setSentimentFilter(opt);
                         setSentimentDropdownOpen(false);
                       }}
-                      className="w-full px-3.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer"
+                      className="w-full px-3.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50/80 flex items-center justify-between cursor-pointer"
                     >
                       <span>{opt}</span>
                       {sentimentFilter === opt && <Check className="w-3.5 h-3.5 text-cyan-600" />}
@@ -864,14 +864,14 @@ export const MasterDashboardView: React.FC = () => {
                   setSentimentDropdownOpen(false);
                   setTopicDropdownOpen(false);
                 }}
-                className="px-3.5 py-1.5 rounded-xl bg-white/90 border border-slate-200/90 hover:border-slate-400 text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer shadow-2xs"
+                className="px-3.5 py-1.5 rounded-xl bg-white/25 backdrop-blur-md border border-white/45 hover:bg-white/45 text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer shadow-2xs transition-colors"
               >
                 <span>{sourceFilter}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
               {sourceDropdownOpen && (
-                <div className="absolute right-0 mt-1.5 w-44 rounded-xl bg-white/95 backdrop-blur-xl border border-slate-200 shadow-xl py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 mt-1.5 w-44 rounded-xl bg-white/85 backdrop-blur-2xl border border-white/70 shadow-xl py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
                   {availableSources.map((opt) => (
                     <button
                       key={opt}
@@ -879,7 +879,7 @@ export const MasterDashboardView: React.FC = () => {
                         setSourceFilter(opt);
                         setSourceDropdownOpen(false);
                       }}
-                      className="w-full px-3.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer"
+                      className="w-full px-3.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50/80 flex items-center justify-between cursor-pointer"
                     >
                       <span>{opt}</span>
                       {sourceFilter === opt && <Check className="w-3.5 h-3.5 text-cyan-600" />}
@@ -897,14 +897,14 @@ export const MasterDashboardView: React.FC = () => {
                   setSentimentDropdownOpen(false);
                   setSourceDropdownOpen(false);
                 }}
-                className="px-3.5 py-1.5 rounded-xl bg-white/90 border border-slate-200/90 hover:border-slate-400 text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer shadow-2xs"
+                className="px-3.5 py-1.5 rounded-xl bg-white/25 backdrop-blur-md border border-white/45 hover:bg-white/45 text-xs font-bold text-slate-800 flex items-center gap-2 cursor-pointer shadow-2xs transition-colors"
               >
                 <span>{topicFilter}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
               {topicDropdownOpen && (
-                <div className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white/95 backdrop-blur-xl border border-slate-200 shadow-xl py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white/85 backdrop-blur-2xl border border-white/70 shadow-xl py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
                   {availableTopics.map((opt) => (
                     <button
                       key={opt}
@@ -912,7 +912,7 @@ export const MasterDashboardView: React.FC = () => {
                         setTopicFilter(opt);
                         setTopicDropdownOpen(false);
                       }}
-                      className="w-full px-3.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer"
+                      className="w-full px-3.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50/80 flex items-center justify-between cursor-pointer"
                     >
                       <span>{opt}</span>
                       {topicFilter === opt && <Check className="w-3.5 h-3.5 text-cyan-600" />}
@@ -939,7 +939,7 @@ export const MasterDashboardView: React.FC = () => {
               return (
                 <div 
                   key={item.id}
-                  className="rounded-xl bg-white/80 border border-slate-200/80 p-4 space-y-2.5 hover:border-slate-300 transition-colors shadow-2xs"
+                  className="rounded-xl bg-white/20 backdrop-blur-md border border-white/40 p-4 space-y-2.5 hover:bg-white/35 hover:border-white/60 transition-all shadow-2xs"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <p className="text-xs font-medium text-slate-900 leading-relaxed flex-1">
@@ -954,21 +954,21 @@ export const MasterDashboardView: React.FC = () => {
                     {/* Sentiment Badge */}
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${
                       isPos 
-                        ? 'bg-cyan-50 text-cyan-700 border-cyan-200' 
+                        ? 'bg-cyan-50/80 text-cyan-700 border-cyan-200' 
                         : isNeg 
-                        ? 'bg-slate-100 text-slate-800 border-slate-200' 
-                        : 'bg-slate-50 text-slate-600 border-slate-200'
+                        ? 'bg-slate-100/80 text-slate-800 border-slate-200' 
+                        : 'bg-slate-50/80 text-slate-600 border-slate-200'
                     }`}>
                       {item.sentiment ? item.sentiment.charAt(0).toUpperCase() + item.sentiment.slice(1) : 'Neutral'}
                     </span>
 
                     {/* Topic Badge */}
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-50 text-slate-700 border border-slate-200">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white/30 text-slate-700 border border-white/50">
                       {item.category}
                     </span>
 
                     {/* Source Badge */}
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 border border-slate-200">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white/30 text-slate-600 border border-white/50">
                       {item.source}
                     </span>
                   </div>
@@ -998,7 +998,7 @@ export const MasterDashboardView: React.FC = () => {
               return (
                 <div 
                   key={issue.rank}
-                  className="rounded-xl bg-white/80 border border-slate-200/90 p-4 space-y-2 shadow-2xs transition-all"
+                  className="rounded-xl bg-white/20 backdrop-blur-md border border-white/40 p-4 space-y-2 shadow-2xs hover:bg-white/35 hover:border-white/60 transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1011,7 +1011,7 @@ export const MasterDashboardView: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                      <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100/80 text-slate-700">
                         {issue.negCount} neg
                       </span>
 
@@ -1019,8 +1019,8 @@ export const MasterDashboardView: React.FC = () => {
                         onClick={() => handleToggleTrack(issue.topic)}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer border ${
                           isSaved 
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300' 
-                            : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                            ? 'bg-emerald-50/80 text-emerald-700 border-emerald-300' 
+                            : 'bg-white/30 backdrop-blur-md hover:bg-white/50 text-slate-800 border-white/50'
                         }`}
                       >
                         {isSaved ? '✓ Saved' : '+ Save to Track'}
@@ -1039,7 +1039,7 @@ export const MasterDashboardView: React.FC = () => {
                     </button>
 
                     {isExpanded && (
-                      <p className="text-xs text-slate-600 mt-2 p-3 bg-slate-50/80 rounded-lg border border-slate-200/60 leading-relaxed font-medium">
+                      <p className="text-xs text-slate-600 mt-2 p-3 bg-white/30 backdrop-blur-md rounded-lg border border-white/40 leading-relaxed font-medium">
                         {issue.whyPrioritize}
                       </p>
                     )}
@@ -1098,7 +1098,7 @@ export const MasterDashboardView: React.FC = () => {
             {savedIssues.map((issue) => (
               <span 
                 key={issue} 
-                className="px-3 py-1 rounded-lg bg-slate-100 text-slate-900 border border-slate-200 text-xs font-bold flex items-center gap-2"
+                className="px-3 py-1 rounded-lg bg-white/30 backdrop-blur-md text-slate-900 border border-white/50 text-xs font-bold flex items-center gap-2 shadow-2xs"
               >
                 <span>{issue}</span>
                 <button 
@@ -1122,7 +1122,7 @@ export const MasterDashboardView: React.FC = () => {
             <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
               Business insight report
             </h2>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-white/40 text-slate-700 border border-white/60">
               {totalEntries} entries
             </span>
           </div>
@@ -1145,7 +1145,7 @@ export const MasterDashboardView: React.FC = () => {
 
             <button
               onClick={handleExportData}
-              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold border border-slate-200/90 flex items-center gap-2 cursor-pointer shadow-2xs transition-colors"
+              className="px-4 py-2 rounded-xl bg-white/30 backdrop-blur-md hover:bg-white/50 text-slate-800 text-xs font-bold border border-white/50 flex items-center gap-2 cursor-pointer shadow-2xs transition-colors"
             >
               <Download className="w-3.5 h-3.5 text-purple-600" />
               <span>Export</span>
@@ -1159,19 +1159,19 @@ export const MasterDashboardView: React.FC = () => {
 
         {/* Pure Clean Executive Metrics Cards (No placeholder images) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-          <div className="p-4 rounded-xl bg-white/60 border border-slate-200/80 space-y-1">
+          <div className="p-4 rounded-xl bg-white/20 backdrop-blur-xl border border-white/40 space-y-1 hover:bg-white/35 transition-all">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Audited Records</span>
             <p className="text-sm font-bold text-slate-900">{totalEntries} Total Feedback Entries</p>
             <p className="text-xs text-slate-500 font-medium">{positivePercent}% Positive · {negativePercent}% Negative</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-white/60 border border-slate-200/80 space-y-1">
+          <div className="p-4 rounded-xl bg-white/20 backdrop-blur-xl border border-white/40 space-y-1 hover:bg-white/35 transition-all">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Primary Churn Driver</span>
             <p className="text-sm font-bold text-slate-900">{topTopicList[0]?.name || 'Reliability'}</p>
             <p className="text-xs text-slate-500 font-medium">{topicNegativeCounts[topTopicList[0]?.name] || 0} negative reports documented</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-white/60 border border-slate-200/80 space-y-1">
+          <div className="p-4 rounded-xl bg-white/20 backdrop-blur-xl border border-white/40 space-y-1 hover:bg-white/35 transition-all">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">AI Decision Engine</span>
             <p className="text-sm font-bold text-slate-900">Adaption v1.4 Reasoning</p>
             <p className="text-xs text-emerald-600 font-bold">Audited & Production Ready</p>

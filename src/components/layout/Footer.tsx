@@ -15,7 +15,7 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="relative w-full overflow-hidden border-t border-slate-200/80 bg-gradient-to-b from-transparent via-slate-50/70 to-slate-100/90 pt-24 pb-12 mt-28">
+    <footer className="relative w-full overflow-hidden border-t border-white/50 bg-gradient-to-b from-transparent via-white/10 to-white/20 pt-24 pb-12 mt-28">
       {/* Ambient background blur elements matching Adaption's aesthetic */}
       <div className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
         <div className="h-[400px] w-[600px] rounded-full bg-blue-100/40 blur-[120px]"></div>
@@ -44,7 +44,7 @@ export const Footer: React.FC = () => {
               ✓ Subscribed to the Adaptive Intelligence Network!
             </div>
           ) : (
-            <form onSubmit={handleSubscribe} className="rounded-[120px] p-1.5 bg-white/90 backdrop-blur-xl border border-black/10 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex items-center gap-2">
+            <form onSubmit={handleSubscribe} className="rounded-[120px] p-1.5 bg-white/35 backdrop-blur-2xl border border-white/60 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center gap-2">
               <input
                 type="email"
                 required
@@ -73,7 +73,7 @@ export const Footer: React.FC = () => {
             href="https://x.com"
             target="_blank"
             rel="noreferrer"
-            className="w-10 h-10 rounded-full bg-white/80 hover:bg-slate-900 text-slate-700 hover:text-white border border-black/10 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105"
+            className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md hover:bg-slate-900 text-slate-700 hover:text-white border border-white/60 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105"
             title="X (Twitter)"
           >
             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -86,7 +86,7 @@ export const Footer: React.FC = () => {
             href="https://linkedin.com"
             target="_blank"
             rel="noreferrer"
-            className="w-10 h-10 rounded-full bg-white/80 hover:bg-slate-900 text-slate-700 hover:text-white border border-black/10 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105"
+            className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md hover:bg-slate-900 text-slate-700 hover:text-white border border-white/60 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105"
             title="LinkedIn"
           >
             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -99,7 +99,7 @@ export const Footer: React.FC = () => {
             href="https://discord.com"
             target="_blank"
             rel="noreferrer"
-            className="w-10 h-10 rounded-full bg-white/80 hover:bg-slate-900 text-slate-700 hover:text-white border border-black/10 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105"
+            className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md hover:bg-slate-900 text-slate-700 hover:text-white border border-white/60 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105"
             title="Discord"
           >
             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -112,7 +112,7 @@ export const Footer: React.FC = () => {
             href="https://github.com/anshuvdebnath-cyber/BUILD-BATTLE-HACKATHON"
             target="_blank"
             rel="noreferrer"
-            className="w-10 h-10 rounded-full bg-white/80 hover:bg-slate-900 text-slate-700 hover:text-white border border-black/10 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105"
+            className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-md hover:bg-slate-900 text-slate-700 hover:text-white border border-white/60 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105"
             title="GitHub Repository"
           >
             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
