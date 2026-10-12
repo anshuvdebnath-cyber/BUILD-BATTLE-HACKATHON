@@ -109,4 +109,62 @@ router.post('/train', adaptionController.trainModel);
 router.get('/training-status', adaptionController.getTrainingStatus);
 router.post('/predict', adaptionController.predict);
 
+// POST /api/adaption/solutions/generate
+// Generates deep engineering solutions with optional free LLM (Groq Llama-3.3-70B / Mixtral)
+router.post("/solutions/generate", async (req, res) => {
+  try {
+    const { issues = [] } = req.body;
+    const groqApiKey = process.env.GROQ_API_KEY;
+
+    if (groqApiKey && issues.length > 0) {
+      try {
+        const prompt = `You are an elite Principal Software Architect and Customer Experience Strategist.
+Analyze the following top customer friction issues and output a JSON array of actionable solutions.
+Issues:
+${JSON.stringify(issues, null, 2)}
+
+Return strictly a valid JSON array of objects with keys:
+- topic: string
+- severity: "Critical" | "High" | "Medium"
+- targetSla: string (e.g. "24h Hotfix", "48h Sprint", "3-Day Sprint")
+- rootCause: string (1-2 sentences on technical root cause)
+- engineeringFix: string (2-3 sentences on concrete architectural/code fix)
+- productCountermeasure: string (1-2 sentences on customer retention / UX fallback)
+- estArrAtRisk: number`;
+
+        const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${groqApiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+            temperature: 0.3
+          })
+        });
+
+        if (groqRes.ok) {
+          const data = await groqRes.json();
+          const content = JSON.parse(data.choices[0].message.content);
+          const solutions = Array.isArray(content) ? content : (content.solutions || Object.values(content)[0]);
+          return res.json({ success: true, provider: "groq-llama-3.3-70b", solutions });
+        }
+      } catch (err) {
+        console.warn("Groq live inference failed, using built-in model:", err.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      provider: "adaption-autoscientist-mistral-7b",
+      hasGroqKey: !!groqApiKey
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;

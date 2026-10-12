@@ -23,7 +23,7 @@ export const RecommendationsView: React.FC = () => {
     recommendations, 
     updateIssueStatus, 
     setActiveTab, 
-    triggerConfetti,
+    showToast,
     activePlaybook,
     setActivePlaybook
   } = useApp();
@@ -40,7 +40,7 @@ export const RecommendationsView: React.FC = () => {
 
   const handleTrackIssue = (id: string) => {
     updateIssueStatus(id, 'in_progress');
-    triggerConfetti();
+    showToast("Issue moved to In Progress on Action Board", "success");
   };
 
   const handleShareWithTeam = (rec: RecommendationItem) => {
@@ -489,7 +489,7 @@ export const RecommendationsView: React.FC = () => {
               <button
                 onClick={() => {
                   updateIssueStatus(activePlaybook.recommendationId, 'in_progress');
-                  triggerConfetti();
+                  showToast("Playbook activated and assigned to engineering sprint", "success");
                   setActivePlaybook(null);
                 }}
                 className="px-4 py-2 btn-primary-pill text-xs font-bold cursor-pointer"

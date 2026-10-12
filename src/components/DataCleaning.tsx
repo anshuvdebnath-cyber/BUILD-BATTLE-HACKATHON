@@ -24,7 +24,7 @@ export function DataCleaning() {
   const { 
     feedbacks, 
     qualityMetrics, 
-    triggerConfetti, 
+    showToast, 
     setActiveTab,
     addManualFeedback,
     runAdaptionPipeline 
@@ -109,7 +109,7 @@ export function DataCleaning() {
         arrValue: predictionData.arrImpact || 45000,
       });
 
-      triggerConfetti();
+      showToast("Feedback record submitted and classified via Adaption AI", "success");
       setLiveText("");
       setLiveCustomer("");
     } catch (err: any) {
@@ -172,7 +172,7 @@ export function DataCleaning() {
       // Synchronize live trained intelligence into global context
       await runAdaptionPipeline();
 
-      triggerConfetti();
+      showToast("Adaption AutoScientist model trained & synchronized", "success");
       setStatus(null);
     } catch (err: any) {
       setError(err.message || "Failed to complete model training.");

@@ -35,7 +35,7 @@ export const OverviewView: React.FC = () => {
     predictiveEscalations,
     customerHealthScores,
     setActivePlaybook,
-    triggerConfetti
+    showToast
   } = useApp();
 
   const [isProcessingModalOpen, setIsProcessingModalOpen] = useState(false);
@@ -48,7 +48,7 @@ export const OverviewView: React.FC = () => {
     setTimeout(() => setProcessingStep(3), 1500);
     setTimeout(() => {
       setProcessingStep(4);
-      triggerConfetti();
+      showToast('Adaption processing pipeline completed', 'success');
     }, 2300);
   };
 

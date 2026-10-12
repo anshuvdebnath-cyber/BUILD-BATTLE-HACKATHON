@@ -15,11 +15,10 @@ import {
   HACKATHON_OFFICIAL_DATASET, 
   HACKATHON_QUALITY_METRICS, 
   HACKATHON_RECOMMENDATIONS,
-  INITIAL_QUALITY_METRICS,
-  SCREENSHOT_FEEDBACK_DATASET
+  INITIAL_QUALITY_METRICS
 } from '../data/mockData';
 import { AdaptionIntelligenceService } from '../services/adaptionService';
-import confetti from 'canvas-confetti';
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 interface AppContextType {
   activeTab: ActiveTab;
@@ -50,7 +49,8 @@ interface AppContextType {
   runAdaptionPipeline: () => Promise<void>;
   updateIssueStatus: (id: string, status: 'backlog' | 'in_progress' | 'resolved') => void;
   loadPreset: (presetName: 'Build Battle 2026 (Official)' | 'CloudScale SaaS' | 'FinPay Banking') => void;
-  triggerConfetti: () => void;
+  triggerConfetti: (customMessage?: string) => void;
+  showToast: (message: string, type?: 'success' | 'info' | 'warning') => void;
   downloadFineTuningData: () => void;
   downloadSampleTemplate: (format: 'hackathon' | 'enterprise') => void;
 }
@@ -59,8 +59,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
-  // Initialize with exact dataset from screenshot, dynamically reactive to live backend
-  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(SCREENSHOT_FEEDBACK_DATASET);
+  // Start completely clean - populated dynamically when CSV is uploaded or feedback is submitted
+  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
   const [qualityMetrics, setQualityMetrics] = useState<AdaptionQualityMetrics>(INITIAL_QUALITY_METRICS);
   const [schemaReport, setSchemaReport] = useState<SchemaValidationReport | null>(null);
@@ -123,17 +123,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return AdaptionIntelligenceService.calculateCustomerHealthScores(feedbacks);
   }, [feedbacks]);
 
-  const triggerConfetti = () => {
-    try {
-      confetti({
-        particleCount: 60,
-        spread: 70,
-        origin: { y: 0.65 },
-        colors: ['#0f172a', '#3b82f6', '#10b981', '#f59e0b']
-      });
-    } catch {
-      // fallback
-    }
+  // Bottom-Right Corner Status Notifications
+  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type?: 'success' | 'info' | 'warning' }>>([]);
+
+  const showToast = (message: string, type: 'success' | 'info' | 'warning' = 'success') => {
+    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3200);
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  // Graceful replacement for previous confetti triggers: displays status toast instead
+  const triggerConfetti = (customMessage?: string) => {
+    showToast(customMessage || 'Status updated successfully', 'success');
   };
 
   const handleCSVUpload = async (file: File) => {
@@ -307,11 +314,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateIssueStatus,
         loadPreset,
         triggerConfetti,
+        showToast,
         downloadFineTuningData,
         downloadSampleTemplate,
       }}
     >
       {children}
+
+      {/* Modern Bottom-Right Corner Status Notification Toast Stack */}
+      <aside aria-label="Status notifications" className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full sm:w-auto">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            role="status"
+            className="pointer-events-auto bg-slate-900/95 text-white backdrop-blur-xl border border-slate-700/80 shadow-[0_12px_40px_rgba(0,0,0,0.35)] rounded-2xl px-4 py-3 flex items-center justify-between gap-3 text-xs font-semibold animate-in fade-in slide-in-from-bottom-4 duration-300 transition-all hover:bg-slate-900"
+          >
+            <div className="flex items-center gap-2.5">
+              {toast.type === 'warning' ? (
+                <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                </div>
+              ) : toast.type === 'info' ? (
+                <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/30">
+                  <Info className="w-3.5 h-3.5" />
+                </div>
+              ) : (
+                <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </div>
+              )}
+              <span className="text-slate-100 text-xs font-medium leading-snug">
+                {toast.message}
+              </span>
+            </div>
+            <button
+              onClick={() => dismissToast(toast.id)}
+              className="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-lg hover:bg-white/10 cursor-pointer ml-2"
+              title="Dismiss"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ))}
+      </aside>
     </AppContext.Provider>
   );
 };

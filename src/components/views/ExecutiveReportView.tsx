@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 export const ExecutiveReportView: React.FC = () => {
-  const { feedbacks, recommendations, qualityMetrics, triggerConfetti, setActiveTab } = useApp();
+  const { feedbacks, recommendations, qualityMetrics, showToast, setActiveTab } = useApp();
   const [copied, setCopied] = useState(false);
 
   if (feedbacks.length === 0) {
@@ -104,13 +104,13 @@ ${recommendations.map(rec => `
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    triggerConfetti();
+    showToast('Executive brief downloaded as Markdown', 'success');
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(generateMarkdownReport());
     setCopied(true);
-    triggerConfetti();
+    showToast('Executive brief copied to clipboard', 'success');
     setTimeout(() => setCopied(false), 2500);
   };
 

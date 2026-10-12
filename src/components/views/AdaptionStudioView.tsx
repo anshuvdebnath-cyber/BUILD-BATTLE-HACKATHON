@@ -26,7 +26,7 @@ export const AdaptionStudioView: React.FC = () => {
     isAdapting, 
     adaptationProgress, 
     adaptationStepText,
-    triggerConfetti,
+    showToast,
     downloadFineTuningData
   } = useApp();
 
@@ -40,7 +40,7 @@ export const AdaptionStudioView: React.FC = () => {
 
   const handleSimulateExpansion = () => {
     setExpansionDone(true);
-    triggerConfetti();
+    showToast('Dataset successfully expanded into ' + selectedLanguage, 'success');
     setTimeout(() => setExpansionDone(false), 3500);
   };
 
