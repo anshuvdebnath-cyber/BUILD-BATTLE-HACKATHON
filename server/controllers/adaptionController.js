@@ -1,4 +1,5 @@
 import { adaptionService } from '../services/adaptionService.js';
+import { config } from '../config/config.js';
 
 let currentTrainingJob = null;
 
@@ -62,7 +63,7 @@ export const adaptionController = {
    */
   predict: async (req, res, next) => {
     try {
-      const { text, modelId = 'insightflow-custom-classifier-v1' } = req.body;
+      const { text, modelId = config.adaptionModelId } = req.body;
       if (!text || !text.trim()) {
         return res.status(400).json({ success: false, error: 'Feedback text is required for prediction' });
       }
