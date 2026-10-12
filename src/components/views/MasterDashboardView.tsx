@@ -367,7 +367,7 @@ export const MasterDashboardView: React.FC = () => {
   const glassCard = "rounded-2xl bg-white/75 backdrop-blur-2xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all";
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto space-y-7 pb-20 select-text font-sans">
+    <div className="w-full max-w-[1280px] mx-auto space-y-7 pb-20 select-text">
       
       {/* Hidden File Input for CSV Ingestion */}
       <input 
@@ -395,7 +395,7 @@ export const MasterDashboardView: React.FC = () => {
       )}
 
       {/* ========================================================
-          1. TOP BRAND HEADER & UTILITY BAR (Restored Favicon Logo & Bigger Heading)
+          1. TOP BRAND HEADER & UTILITY BAR (Restored Favicon Logo & Sleek Header)
           ======================================================== */}
       <header className={`${glassCard} px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4`}>
         
@@ -422,7 +422,7 @@ export const MasterDashboardView: React.FC = () => {
               <circle cx="13.5" cy="20" r="1.5" fill="#F8FAFC" />
             </svg>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
             InsightFlow Feedback & Decision Platform
           </h1>
         </div>
@@ -487,7 +487,7 @@ export const MasterDashboardView: React.FC = () => {
             </div>
 
             <div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
                 Turn feedback into decisions
               </h2>
               <p className="text-xs font-medium text-slate-500 mt-1">
@@ -812,10 +812,10 @@ export const MasterDashboardView: React.FC = () => {
       <div className={`${glassCard} p-6 space-y-5`}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
               Feedback inbox
             </h2>
-            <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
               {filteredFeedbacks.length}
             </span>
           </div>
@@ -983,7 +983,7 @@ export const MasterDashboardView: React.FC = () => {
           7. HIGH-PRIORITY ISSUES (Ranked Cards + Expanders)
           ======================================================== */}
       <div className={`${glassCard} p-6 space-y-4`}>
-        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+        <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
           High-priority issues
         </h2>
 
@@ -1058,7 +1058,7 @@ export const MasterDashboardView: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-indigo-600" />
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
               Recommendations
             </h2>
           </div>
@@ -1085,7 +1085,7 @@ export const MasterDashboardView: React.FC = () => {
           9. SAVED FOR TRACKING
           ======================================================== */}
       <div className={`${glassCard} p-6 space-y-2`}>
-        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+        <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
           Saved for tracking
         </h2>
         
@@ -1114,15 +1114,15 @@ export const MasterDashboardView: React.FC = () => {
       </div>
 
       {/* ========================================================
-          10. BUSINESS INSIGHT REPORT (Images Removed + Bigger Heading)
+          10. BUSINESS INSIGHT REPORT (Images Removed + Sleek Heading)
           ======================================================== */}
       <div className={`${glassCard} p-6 space-y-5`}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
               Business insight report
             </h2>
-            <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
               {totalEntries} entries
             </span>
           </div>
