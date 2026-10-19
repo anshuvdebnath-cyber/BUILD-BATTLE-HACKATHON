@@ -1,5 +1,6 @@
 import { storageService } from '../services/storageService.js';
 import { adaptionService } from '../services/adaptionService.js';
+import { sanitizeText } from '../middleware/security.js';
 
 export const feedbackController = {
   /**
@@ -70,17 +71,17 @@ export const feedbackController = {
       const parsedRows = [];
       for (let i = 1; i < lines.length; i++) {
         const cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
-        const textVal = cols[textIdx] || '';
+        const textVal = sanitizeText(cols[textIdx] || '');
         if (textVal.trim()) {
-          const custVal = (custIdx !== -1 && cols[custIdx]) ? cols[custIdx] : `CUST-${1000 + i}`;
+          const custVal = sanitizeText((custIdx !== -1 && cols[custIdx]) ? cols[custIdx] : `CUST-${1000 + i}`);
           parsedRows.push({
             customer_id: custVal,
             customerName: custVal.includes('CUST') ? `Account #${custVal.replace(/\D/g, '') || i}` : custVal,
             feedback_text: textVal,
             rawText: textVal,
             date: (dateIdx !== -1 && cols[dateIdx]) ? cols[dateIdx] : new Date().toISOString().split('T')[0],
-            source: (sourceIdx !== -1 && cols[sourceIdx]) ? cols[sourceIdx] : 'CSV Upload',
-            sentiment: (sentIdx !== -1 && cols[sentIdx]) ? cols[sentIdx] : (/crash|fail|slow|bug|broken|error|bad|issue/i.test(textVal) ? 'negative' : /love|great|awesome|fast|good|amazing/i.test(textVal) ? 'positive' : 'neutral')
+            source: (sourceIdx !== -1 && cols[sourceIdx]) ? sanitizeText(cols[sourceIdx]) : 'CSV Upload',
+            sentiment: (sentIdx !== -1 && cols[sentIdx]) ? sanitizeText(cols[sentIdx]) : (/crash|fail|slow|bug|broken|error|bad|issue/i.test(textVal) ? 'negative' : /love|great|awesome|fast|good|amazing/i.test(textVal) ? 'positive' : 'neutral')
           });
         }
       }

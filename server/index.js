@@ -8,12 +8,19 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { adaptionService } from './services/adaptionService.js';
 import { storageService } from './services/storageService.js';
 
+import { securityHeaders, rateLimiter } from './middleware/security.js';
+
 const app = express();
+
+// Security Hardening
+app.disable('x-powered-by');
+app.use(securityHeaders);
+app.use(rateLimiter);
 
 // Global Middleware
 app.use(cors({ origin: config.corsOrigin }));
-app.use(express.json({ limit: '25mb' }));
-app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {

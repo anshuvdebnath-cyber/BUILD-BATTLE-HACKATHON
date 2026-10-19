@@ -13,8 +13,10 @@ import {
 import { adaptionController } from '../../controllers/adaptionController.js';
 import { storageService } from '../../services/storageService.js';
 
+import { upload } from '../../middleware/uploadMiddleware.js';
+import { isValidOutboundUrl } from '../../middleware/security.js';
+
 const router = express.Router();
-const upload = multer({ dest: "uploads/" });
 
 // ==========================================
 // CORE ADAPTION LABS PRODUCTION ENDPOINTS
@@ -238,41 +240,76 @@ router.post("/solutions/generate", async (req, res) => {
     const { issues = [] } = req.body;
     const mistralApiUrl = process.env.MISTRAL_API_URL;
     const groqApiKey = process.env.GROQ_API_KEY;
+    const startTime = Date.now();
 
     // 1. Priority: Live Fine-Tuned Mistral 7B GPU endpoint (from Google Colab / cloud host)
-    if (mistralApiUrl && issues.length > 0) {
+    if (mistralApiUrl && isValidOutboundUrl(mistralApiUrl) && issues.length > 0) {
       try {
         console.log(`🚀 Querying live fine-tuned Mistral-7B model at ${mistralApiUrl}...`);
-        const prompt = `Analyze these customer friction issues:\n${JSON.stringify(issues, null, 2)}\nProvide category, severity, root cause, and engineering fix.`;
         
-        const colabRes = await fetch(mistralApiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: prompt })
-        });
+        // Query Mistral-7B for each individual issue with its real quotes from the dataset!
+        const solutions = await Promise.all(issues.map(async (iss, idx) => {
+          const sampleQuotes = (iss.sampleFeedback || []).filter(Boolean).join(" | ") || iss.topic;
+          const prompt = `<s>[INST] Analyze customer feedback for topic '${iss.topic}'. User complaints: '${sampleQuotes}'. Timestamp: ${Date.now()}. Provide: 1. Root Cause Analysis, 2. Concrete Engineering Fix, 3. Product Countermeasure. [/INST]`;
 
-        if (colabRes.ok) {
-          const colabData = await colabRes.json();
-          const rawOutput = colabData.output || colabData.analysis || JSON.stringify(colabData);
-          
-          const solutions = issues.map((iss, idx) => ({
-            id: `mistral-sol-${idx}`,
-            topic: iss.topic,
-            severity: idx === 0 ? 'Critical' : 'High',
-            negCount: iss.negCount || 5,
-            estArrAtRisk: (iss.negCount || 5) * 14200,
-            targetSla: idx === 0 ? '24h Hotfix' : '48h Sprint',
-            rootCause: `[Mistral-7B LoRA]: ${rawOutput.substring(0, 180)}...`,
-            engineeringFix: `[Mistral-7B LoRA Fix]: Reconcile telemetry, profile latency, and patch regression test guardrails.`,
-            productCountermeasure: `Proactive customer communications and status page notification broadcast.`
-          }));
+          try {
+            const colabRes = await fetch(mistralApiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: prompt })
+            });
 
+            if (colabRes.ok) {
+              const colabData = await colabRes.json();
+              const text = colabData.output || colabData.analysis || "";
+              
+              // Extract structured sections from the real Mistral model output
+              const rootCauseMatch = text.match(/Root Cause:?([\s\S]*?)(?=Engineering Fix|Product Countermeasure|Category|Severity|$)/i);
+              const fixMatch = text.match(/Engineering Fix:?([\s\S]*?)(?=Product Countermeasure|Root Cause|Category|Severity|$)/i);
+              const counterMatch = text.match(/Product Countermeasure:?([\s\S]*?)(?=Root Cause|Engineering Fix|Category|Severity|$)/i);
+              const severityMatch = text.match(/Severity:?\s*([A-Za-z]+)/i);
+
+              const parsedRootCause = rootCauseMatch && rootCauseMatch[1].trim().length > 15 
+                ? rootCauseMatch[1].trim() 
+                : text.slice(0, 260);
+              const parsedFix = fixMatch && fixMatch[1].trim().length > 15 
+                ? fixMatch[1].trim() 
+                : `Deploy targeted architectural fix for root cause identified in ${iss.topic}.`;
+              const parsedCounter = counterMatch && counterMatch[1].trim().length > 15
+                ? counterMatch[1].trim()
+                : `Proactively alert accounts impacted by ${iss.topic} and monitor SLA recovery.`;
+              const parsedSeverity = severityMatch ? severityMatch[1].trim() : (idx === 0 ? 'Critical' : 'High');
+
+              return {
+                id: `mistral-sol-${idx}-${Date.now()}`,
+                topic: iss.topic,
+                severity: (parsedSeverity.toLowerCase().includes('crit') ? 'Critical' : parsedSeverity.toLowerCase().includes('med') ? 'Medium' : 'High'),
+                negCount: iss.negCount || 5,
+                estArrAtRisk: (iss.negCount || 5) * 14200,
+                targetSla: idx === 0 ? '24h Hotfix' : '48h Sprint',
+                rootCause: parsedRootCause,
+                engineeringFix: parsedFix,
+                productCountermeasure: parsedCounter,
+                rawOutput: text,
+                modelGenerated: true
+              };
+            }
+          } catch (e) {
+            console.warn(`Per-issue query to Mistral failed for ${iss.topic}:`, e.message);
+          }
+          return null;
+        }));
+
+        const validSolutions = solutions.filter(Boolean);
+        if (validSolutions.length > 0) {
+          const latencyMs = Date.now() - startTime;
           return res.json({
             success: true,
             provider: "fine-tuned-mistral-7b-gpu",
             model: "mistralai/Mistral-7B-Instruct-v0.2 (Adaption LoRA Checkpoint)",
-            rawOutput,
-            solutions
+            endpoint: mistralApiUrl,
+            latencyMs,
+            solutions: validSolutions
           });
         }
       } catch (colabErr) {
@@ -282,21 +319,29 @@ router.post("/solutions/generate", async (req, res) => {
 
     if (groqApiKey && issues.length > 0) {
       try {
-        const prompt = `You are an elite Principal Software Architect and Customer Experience Strategist.
-Analyze the following top customer friction issues and output a JSON array of actionable solutions.
+        const timestamp = new Date().toISOString();
+        const compactIssues = issues.slice(0, 4).map(iss => ({
+          topic: iss.topic,
+          negCount: iss.negCount || 5,
+          sampleComplaints: (iss.sampleFeedback || []).slice(0, 2).map(t => typeof t === 'string' ? t.slice(0, 120) : '')
+        }));
+
+        const prompt = `You are a Principal Software Architect and Customer Experience Strategist.
+Analyze the following customer friction issues and generate brand-new, freshly reasoned technical solutions.
+Execution Timestamp: ${timestamp}
 Issues:
-${JSON.stringify(issues, null, 2)}
+${JSON.stringify(compactIssues, null, 2)}
 
 Return strictly a valid JSON array of objects with keys:
 - topic: string
 - severity: "Critical" | "High" | "Medium"
 - targetSla: string (e.g. "24h Hotfix", "48h Sprint", "3-Day Sprint")
-- rootCause: string (1-2 sentences on technical root cause)
-- engineeringFix: string (2-3 sentences on concrete architectural/code fix)
-- productCountermeasure: string (1-2 sentences on customer retention / UX fallback)
+- rootCause: string (2-3 sentences on the concrete technical failure mode)
+- engineeringFix: string (2-3 sentences on code architecture, database index, or system fix)
+- productCountermeasure: string (1-2 sentences on UX fallback or user messaging)
 - estArrAtRisk: number`;
 
-        const groqModel = "llama-3.3-70b-versatile";
+        const groqModel = "openai/gpt-oss-120b";
         const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -306,7 +351,7 @@ Return strictly a valid JSON array of objects with keys:
           body: JSON.stringify({
             model: groqModel,
             messages: [{ role: "user", content: prompt + "\nStrictly output valid raw JSON with a 'solutions' array." }],
-            temperature: 0.3
+            temperature: 0.7
           })
         });
 
@@ -321,8 +366,14 @@ Return strictly a valid JSON array of objects with keys:
             cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '').trim();
           }
           const content = JSON.parse(cleaned);
-          const solutions = Array.isArray(content) ? content : (content.solutions || Object.values(content)[0]);
-          return res.json({ success: true, provider: "groq-ai", solutions });
+          const rawSolutions = Array.isArray(content) ? content : (content.solutions || Object.values(content)[0]);
+          const solutions = rawSolutions.map((s, idx) => ({
+            ...s,
+            id: `groq-sol-${idx}-${Date.now()}`,
+            rawOutput: `${s.rootCause}\n\nEngineering Fix: ${s.engineeringFix}`
+          }));
+          const latencyMs = Date.now() - startTime;
+          return res.json({ success: true, provider: "groq-ai", latencyMs, solutions });
         } else {
           const errText = await groqRes.text();
           console.warn("Groq API returned error status:", groqRes.status, errText);
