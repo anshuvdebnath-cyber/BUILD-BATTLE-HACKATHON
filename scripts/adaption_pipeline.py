@@ -30,10 +30,25 @@ except ImportError:
 
 client = Adaption(api_key=API_KEY)
 
-CSV_FILE = "test_feedback_dataset.csv"
-if not os.path.exists(CSV_FILE):
-    print(f"⚠️  {CSV_FILE} not found, falling back to cx_feedback_preferences.csv")
-    CSV_FILE = "cx_feedback_preferences.csv"
+candidate_files = [
+    "public/hackathon_feedback.csv",
+    "server/data/sample.csv",
+    "test_feedback_dataset.csv",
+    "cx_feedback_preferences.csv"
+]
+CSV_FILE = next((f for f in candidate_files if os.path.exists(f)), None)
+
+if not CSV_FILE:
+    CSV_FILE = "sample_feedback.csv"
+    with open(CSV_FILE, "w", encoding="utf-8") as f:
+        f.write("review,category\n")
+        f.write('"Checkout API failed twice and charged card without confirming order.","Fraud and Scam"\n')
+        f.write('"Delivery was delayed by 5 days with zero courier tracking updates.","Operational Issues"\n')
+        f.write('"Customer service representative never responded within SLA.","Customer Service"\n')
+        f.write('"Unable to authenticate via SAML SSO on mobile app.","Authentication & SSO"\n')
+    print(f"ℹ️ Auto-generated valid sample dataset: {CSV_FILE}")
+else:
+    print(f"📁 Using detected dataset: {CSV_FILE}")
 
 print(f"🚀 [Step 1] Uploading file: {CSV_FILE}...")
 dataset = client.datasets.upload_file(
@@ -96,6 +111,11 @@ run = client.autoscientist.wait_for_completion(run.id)
 print(f"✅ AutoScientist {run.status} — Best Win Rate: {run.best_win_rate}")
 
 print("📦 [Step 8] Downloading the best adapter weights...")
-if run.download_available:
-    client.autoscientist.download(run.id).write_to_file("adapter.tar.gz")
+if getattr(run, "download_available", False):
+    dl = client.autoscientist.download(run.id)
+    if hasattr(dl, "write_to_file"):
+        dl.write_to_file("adapter.tar.gz")
+    elif isinstance(dl, bytes):
+        with open("adapter.tar.gz", "wb") as f:
+            f.write(dl)
     print("🎉 Adapter downloaded successfully to adapter.tar.gz!")
