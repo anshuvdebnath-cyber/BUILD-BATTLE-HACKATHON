@@ -12,9 +12,25 @@ Usage:
 import os
 import sys
 import time
-from dotenv import load_dotenv
+import importlib
 
-load_dotenv()
+def _load_env_fallback():
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    if not os.path.exists(env_path):
+        env_path = ".env"
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+try:
+    dotenv = importlib.import_module("dotenv")
+    dotenv.load_dotenv()
+except Exception:
+    _load_env_fallback()
 
 API_KEY = os.getenv("ADAPTION_API_KEY")
 if not API_KEY:
@@ -22,8 +38,9 @@ if not API_KEY:
     sys.exit(1)
 
 try:
-    from adaption import Adaption
-except ImportError:
+    _adaption_mod = importlib.import_module("adaption")
+    Adaption = getattr(_adaption_mod, "Adaption")
+except Exception:
     print("⚠️  'adaption' package is not installed.")
     print("Install it with: pip install adaption")
     sys.exit(1)

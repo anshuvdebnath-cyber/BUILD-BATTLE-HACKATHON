@@ -10,14 +10,28 @@ import re
 import urllib.request
 import tarfile
 
+import importlib
+
 # ==========================================
 # 1. API Configuration & Secret Handling
 # ==========================================
+def _load_env_fallback():
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    if not os.path.exists(env_path):
+        env_path = ".env"
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
 try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
+    dotenv = importlib.import_module("dotenv")
+    dotenv.load_dotenv()
+except Exception:
+    _load_env_fallback()
 
 API_KEY = os.getenv("ADAPTION_API_KEY", "pt_live_f571fe1acf24b42406e1b8c7ba206d7e87405040")
 RUN_ID = "792bafcc-e22b-4fdc-b91f-7b21352d1cce"
@@ -51,9 +65,9 @@ def setup_adapter():
 
     # Method A: Pure Python zstandard (recommended for Windows / Colab)
     try:
-        import zstandard
+        zstandard = importlib.import_module("zstandard")
         tar_temp = "adapter.tar"
-        dctx = zstandard.ZstdDecompressor()
+        dctx = getattr(zstandard, "ZstdDecompressor")()
         with open(TAR_FILENAME, "rb") as ifh, open(tar_temp, "wb") as ofh:
             dctx.copy_stream(ifh, ofh)
         with tarfile.open(tar_temp, "r") as tar:
@@ -80,9 +94,14 @@ def setup_adapter():
 # 3. Model Loading & Inference Engine
 # ==========================================
 def load_model():
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-    from peft import PeftModel
+    torch = importlib.import_module("torch")
+    transformers = importlib.import_module("transformers")
+    peft = importlib.import_module("peft")
+
+    AutoModelForCausalLM = getattr(transformers, "AutoModelForCausalLM")
+    AutoTokenizer = getattr(transformers, "AutoTokenizer")
+    BitsAndBytesConfig = getattr(transformers, "BitsAndBytesConfig")
+    PeftModel = getattr(peft, "PeftModel")
 
     base_model_id = "mistralai/Mistral-7B-Instruct-v0.2"
 
@@ -118,10 +137,12 @@ def load_model():
 def start_live_service(tokenizer, model):
     import threading
     import subprocess
-    import torch
-    import uvicorn
-    from fastapi import FastAPI
-    from pydantic import BaseModel
+    torch = importlib.import_module("torch")
+    uvicorn = importlib.import_module("uvicorn")
+    fastapi = importlib.import_module("fastapi")
+    pydantic = importlib.import_module("pydantic")
+    FastAPI = getattr(fastapi, "FastAPI")
+    BaseModel = getattr(pydantic, "BaseModel")
 
     app = FastAPI(title="InsightFlow Live Mistral-7B API")
 
@@ -184,7 +205,7 @@ if __name__ == "__main__":
     setup_adapter()
     # Check if GPU is available
     try:
-        import torch
+        torch = importlib.import_module("torch")
         if torch.cuda.is_available():
             tokenizer, model = load_model()
             start_live_service(tokenizer, model)
