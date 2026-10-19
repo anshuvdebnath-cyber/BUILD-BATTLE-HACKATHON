@@ -498,27 +498,14 @@ export class AdaptionIntelligenceService {
         (negativeItems.length * 15) + (totalArr / 15000) + (isCritical ? 35 : 10)
       ));
 
-      let title = `Remediate recurring bottlenecks in ${category}`;
-      let rootCause = `Repeated failure reports across ${negativeItems.length} accounts within ${category}.`;
-      let action = `Schedule immediate engineering sprint to patch identified failure signatures.`;
+      const topQuote = negativeItems[0]?.rawText || `Recurring friction in ${category}`;
+      const secondQuote = negativeItems[1]?.rawText || '';
 
-      if (category === 'Authentication & SSO') {
-        title = 'Resolve SAML SSO 401 Assertion Failures & IdP Cert Handshake';
-        rootCause = 'SAML schema updates caused certificate signature mismatch, locking out enterprise engineering teams.';
-        action = 'Deploy immediate backward-compatible patch for SAML assertion parser and notify IdP admins.';
-      } else if (category === 'API & Webhooks') {
-        title = 'Scale Webhook Queue Buffer & Expand High-Throughput Egress Pool';
-        rootCause = 'Traffic spikes over 10k req/min saturate in-memory worker queue, dropping outbound notifications.';
-        action = 'Increase Redis egress partitions and enable backpressure retries with exponential backoff.';
-      } else if (category === 'Performance & Latency') {
-        title = 'Deploy Regional Edge Cache Replicas for High-Volume Catalog APIs';
-        rootCause = 'Cross-continental roundtrips to US-East primary DB causes 2000ms+ latency spikes in EU regions.';
-        action = 'Provision Cloudflare Workers KV or Fastly edge read-cache with 60-second TTL.';
-      } else if (category === 'Billing & Invoicing') {
-        title = 'Reconcile Mid-Cycle Seat Proration Disparity in Stripe Invoicing';
-        rootCause = 'Async sync lag between seat provisioning UI and billing webhook creates duplicate proration debits.';
-        action = 'Synchronize billing ledger events prior to generating mid-cycle invoice drafts.';
-      }
+      const title = `Remediate ${category}: "${topQuote.length > 55 ? topQuote.slice(0, 52) + '...' : topQuote}"`;
+      const rootCause = `Direct friction reported across ${negativeItems.length} accounts: "${topQuote.slice(0, 160)}".`;
+      const action = secondQuote 
+        ? `Deploy targeted fix addressing reported symptom: "${secondQuote.slice(0, 140)}". Verify regression test coverage.`
+        : `Implement immediate mitigation for root cause identified in "${topQuote.slice(0, 140)}".`;
 
       recommendations.push({
         id: `REC-0${recIdx++}`,
@@ -674,51 +661,32 @@ export class AdaptionIntelligenceService {
       }
     });
 
+    if (items.length === 0) return [];
     const escalations: PredictiveEscalation[] = [];
 
-    // Evaluate Fraud & Scam
-    const fraudData = categoryCounts['Fraud and Scam'] || { total: 42, negative: 38, arr: 185000 };
-    escalations.push({
-      id: 'ESC-01',
-      category: 'Fraud and Scam',
-      title: 'Accelerating Consumer Phishing & Unauthorized Seller Infiltration',
-      volumeGrowthRate: 48.5,
-      sentimentTrajectory: 'accelerating_negative',
-      predictedSlaBreachDays: 2,
-      alertLevel: 'urgent_spike',
-      anomalyDescription: 'Complaint velocity grew +48.5% over the last 48 hours. Pattern indicates coordinated merchant abuse.',
-      affectedAccountsCount: fraudData.negative,
-      estimatedArrExposure: fraudData.arr
-    });
+    // Sort categories by negative item count
+    const sortedCategories = Object.entries(categoryCounts)
+      .filter(([_, data]) => data.negative > 0)
+      .sort((a, b) => b[1].negative - a[1].negative)
+      .slice(0, 3);
 
-    // Evaluate Operational Issues
-    const opData = categoryCounts['Operational Issues'] || { total: 35, negative: 28, arr: 120000 };
-    escalations.push({
-      id: 'ESC-02',
-      category: 'Operational Issues',
-      title: 'Regional Fulfillment Transit Latency & Tracking Blackout',
-      volumeGrowthRate: 31.2,
-      sentimentTrajectory: 'accelerating_negative',
-      predictedSlaBreachDays: 3,
-      alertLevel: 'warning',
-      anomalyDescription: 'Delivery timeout mentions rose +31.2%. Concentrated in Midwest & EU transit hubs.',
-      affectedAccountsCount: opData.negative,
-      estimatedArrExposure: opData.arr
-    });
+    sortedCategories.forEach(([category, data], idx) => {
+      const catNegativeItems = items.filter(i => i.category === category && i.sentiment === 'negative');
+      const sample = catNegativeItems[0]?.rawText || `Recurring anomalies in ${category}`;
+      const growthRate = Number(((data.negative / (data.total || 1)) * 50 + 12.5).toFixed(1));
 
-    // Evaluate Customer Service
-    const csData = categoryCounts['Customer Service'] || { total: 29, negative: 18, arr: 82000 };
-    escalations.push({
-      id: 'ESC-03',
-      category: 'Customer Service',
-      title: 'Support Queue First-Response SLA Breach Threshold Approaching',
-      volumeGrowthRate: 19.4,
-      sentimentTrajectory: 'stable',
-      predictedSlaBreachDays: 5,
-      alertLevel: 'normal',
-      anomalyDescription: 'Ticket queue length exceeds normal staffing capacity during morning surge windows.',
-      affectedAccountsCount: csData.negative,
-      estimatedArrExposure: csData.arr
+      escalations.push({
+        id: `ESC-0${idx + 1}`,
+        category: category as any,
+        title: `Spike in ${category}: "${sample.length > 50 ? sample.slice(0, 48) + '...' : sample}"`,
+        volumeGrowthRate: growthRate,
+        sentimentTrajectory: growthRate > 35 ? 'accelerating_negative' : 'stable',
+        predictedSlaBreachDays: idx === 0 ? 2 : idx === 1 ? 3 : 5,
+        alertLevel: growthRate > 35 ? 'urgent_spike' : 'warning',
+        anomalyDescription: `${data.negative} critical customer reports identified in current dataset. Quote: "${sample.slice(0, 110)}"`,
+        affectedAccountsCount: data.negative,
+        estimatedArrExposure: data.arr
+      });
     });
 
     return escalations;

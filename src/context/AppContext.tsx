@@ -163,7 +163,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSchemaReport(report);
       setHasRunAdaption(false);
 
-      // Generate initial recommendations & playbooks
+      // Concurrently synchronize with backend storage so live server endpoints use the exact uploaded data
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        await fetch('http://localhost:3001/api/feedback/upload', {
+          method: 'POST',
+          body: formData
+        });
+      } catch (backendErr) {
+        console.warn('Backend live sync notice:', backendErr);
+      }
+
+      // Generate initial recommendations & playbooks strictly from live items
       const newRecs = AdaptionIntelligenceService.generateRecommendations(items);
       setRecommendations(newRecs);
 
@@ -220,8 +232,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAdaptationProgress(10);
     setAdaptationStepText('Connecting to Adaption Labs Adaptive Data Engine...');
 
+    if (feedbacks.length === 0) {
+      showToast('Please upload a CSV dataset first to run the live adaptation pipeline', 'warning');
+      setIsAdapting(false);
+      return;
+    }
+
     try {
-      const itemsToAdapt = feedbacks.length > 0 ? feedbacks : HACKATHON_OFFICIAL_DATASET;
+      const itemsToAdapt = feedbacks;
       const result = await AdaptionIntelligenceService.runAdaptiveDataPipeline(
         itemsToAdapt,
         recipes,

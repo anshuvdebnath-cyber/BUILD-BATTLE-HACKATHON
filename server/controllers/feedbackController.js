@@ -85,7 +85,9 @@ export const feedbackController = {
         }
       }
 
-      const inserted = storageService.insertMany(parsedRows.slice(0, 100)); // Store sample rows
+      // Wipe any previous dataset so the new upload is 100% computed fresh and live
+      storageService.clear();
+      const inserted = storageService.insertMany(parsedRows); // Store all rows live
 
       // Ingest to Adaption dataset
       let adaptionDataset = null;
