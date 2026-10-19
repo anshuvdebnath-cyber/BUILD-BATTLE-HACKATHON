@@ -29,3 +29,12 @@ uploads/
 server/uploads/
 /data/
 !server/data/
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
